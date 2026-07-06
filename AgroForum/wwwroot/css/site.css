@@ -1,0 +1,113 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+
+
+/* added by me */
+
+:root {
+    --agro-green: #198754;
+    --agro-dark: #17211b;
+    --agro-background: #f7faf8;
+    --agro-border: #e3ebe6;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    background-color: var(--agro-background);
+    color: var(--agro-dark);
+}
+
+.navbar-brand {
+    letter-spacing: -0.5px;
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+.hero-section {
+    background: radial-gradient( circle at 85% 20%, rgba(25, 135, 84, 0.10), transparent 30% ), var(--agro-background);
+}
+
+.hero-description {
+    max-width: 680px;
+    line-height: 1.7;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid rgba(25, 135, 84, 0.2);
+    border-radius: 999px;
+    background-color: rgba(25, 135, 84, 0.08);
+    color: var(--agro-green);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.feature-card {
+    padding: 2rem;
+    background-color: #ffffff;
+    border: 1px solid var(--agro-border);
+    border-radius: 1.25rem;
+    box-shadow: 0 1rem 3rem rgba(23, 33, 27, 0.08);
+}
+
+.feature-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+    .feature-item + .feature-item {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--agro-border);
+    }
+
+.feature-icon {
+    display: flex;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--agro-green);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.btn {
+    border-radius: 0.7rem;
+}
+
+.footer {
+    background-color: #ffffff;
+}
