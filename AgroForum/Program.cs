@@ -1,3 +1,4 @@
+using AgroForum.Constants;
 using AgroForum.Data;
 using AgroForum.Models;
 using Microsoft.AspNetCore.Identity;
@@ -15,9 +16,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
+.AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 var app = builder.Build();
+
+await SeedRolesAsync(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -45,3 +49,18 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+static async Task SeedRolesAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    foreach (var role in UserRoles.All)
+    {
+        var exists = await roleManager.RoleExistsAsync(role);
+        if (!exists)
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}

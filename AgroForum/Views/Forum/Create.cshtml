@@ -1,0 +1,58 @@
+@model CreateForumPostViewModel
+
+@{
+    ViewData["Title"] = "Create Post";
+}
+
+<section class="forum-shell py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+                    <div>
+                        <p class="text-success fw-semibold mb-1">New discussion</p>
+                        <h1 class="h2 fw-bold mb-0">Create a forum post</h1>
+                    </div>
+                    <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+                </div>
+
+                <form asp-action="Create" method="post" class="forum-card">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold"></label>
+                        <input asp-for="Title" class="form-control form-control-lg" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Content" class="form-control" rows="9"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Tags" class="form-label fw-semibold"></label>
+                        <input asp-for="Tags" class="form-control" placeholder="soil, irrigation, tomatoes" />
+                        <div class="form-text">Separate tags with commas. Moderators can adjust tags later.</div>
+                        <span asp-validation-for="Tags" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input asp-for="IsAnonymous" class="form-check-input" />
+                        <label asp-for="IsAnonymous" class="form-check-label"></label>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+                        <button type="submit" class="btn btn-success">Publish post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

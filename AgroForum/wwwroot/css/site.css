@@ -111,3 +111,125 @@ body {
 .footer {
     background-color: #ffffff;
 }
+
+.forum-shell {
+    min-height: 70vh;
+}
+
+.forum-card {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid var(--agro-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.75rem 2rem rgba(23, 33, 27, 0.06);
+}
+
+.forum-post-list,
+.moderation-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.forum-post-card {
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.forum-post-card:hover {
+    border-color: rgba(25, 135, 84, 0.35);
+    transform: translateY(-1px);
+}
+
+.forum-post-title {
+    color: var(--agro-dark);
+    text-decoration: none;
+}
+
+.forum-post-title:hover {
+    color: var(--agro-green);
+}
+
+.forum-meta {
+    color: #6b766f;
+    font-size: 0.9rem;
+}
+
+.forum-content {
+    color: #26342c;
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+.forum-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid rgba(25, 135, 84, 0.2);
+    border-radius: 999px;
+    background-color: rgba(25, 135, 84, 0.08);
+    color: var(--agro-green);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.tag-remove {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(25, 135, 84, 0.16);
+    color: var(--agro-green);
+    font-size: 0.75rem;
+    line-height: 18px;
+}
+
+.comment-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.comment-item {
+    padding: 1rem 0;
+    border-top: 1px solid var(--agro-border);
+}
+
+.comment-item:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.moderator-tag-form {
+    max-width: 520px;
+}
+
+.moderation-card {
+    border-left: 4px solid #dc3545;
+}
+
+.moderation-actions {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.moderation-action-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+}
+
+.resolved-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.resolved-item + .resolved-item {
+    padding-top: 1rem;
+    border-top: 1px solid var(--agro-border);
+}
+
+@media (max-width: 575.98px) {
+    .moderation-action-form {
+        grid-template-columns: 1fr;
+    }
+}

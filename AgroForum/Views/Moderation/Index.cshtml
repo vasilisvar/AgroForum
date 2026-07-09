@@ -1,0 +1,125 @@
+@model ModerationDashboardViewModel
+
+@{
+    ViewData["Title"] = "Moderation";
+}
+
+<section class="forum-shell py-5">
+    <div class="container">
+        @if (TempData["ModerationMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-success fw-semibold mb-1">Moderator zone</p>
+                <h1 class="display-6 fw-bold mb-2">Reported content</h1>
+                <p class="text-muted mb-0">Review reported posts and comments, then decide whether they violate the rules.</p>
+            </div>
+            <span class="badge text-bg-warning fs-6">@Model.PendingReports.Count pending</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <h2 class="h4 fw-bold mb-3">Pending reports</h2>
+
+                @if (Model.PendingReports.Any())
+                {
+                    <div class="moderation-list">
+                        @foreach (var report in Model.PendingReports)
+                        {
+                            <article class="forum-card moderation-card">
+                                <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+                                    <div>
+                                        <span class="badge text-bg-danger mb-2">@report.TargetType report</span>
+                                        <h3 class="h5 fw-bold mb-1">@report.TargetTitle</h3>
+                                        <p class="forum-meta mb-0">
+                                            Reported by @report.ReporterName on @report.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                        </p>
+                                    </div>
+                                    @if (report.ForumPostId.HasValue)
+                                    {
+                                        <a class="btn btn-outline-secondary btn-sm align-self-start"
+                                           asp-controller="Forum"
+                                           asp-action="Details"
+                                           asp-route-id="@report.ForumPostId">Open discussion</a>
+                                    }
+                                </div>
+
+                                <dl class="row mb-3">
+                                    <dt class="col-sm-3">Reason</dt>
+                                    <dd class="col-sm-9">@report.Reason</dd>
+
+                                    <dt class="col-sm-3">Reported text</dt>
+                                    <dd class="col-sm-9">@report.TargetContent</dd>
+
+                                    <dt class="col-sm-3">Author</dt>
+                                    <dd class="col-sm-9">@report.TargetAuthorName</dd>
+
+                                    @if (!string.IsNullOrWhiteSpace(report.Details))
+                                    {
+                                        <dt class="col-sm-3">Details</dt>
+                                        <dd class="col-sm-9">@report.Details</dd>
+                                    }
+                                </dl>
+
+                                <div class="moderation-actions">
+                                    @if (report.TargetType == "Comment" && !report.IsTargetDeleted)
+                                    {
+                                        <form asp-action="RemoveComment" method="post" class="moderation-action-form">
+                                            <input type="hidden" name="reportId" value="@report.Id" />
+                                            <input name="deletionReason"
+                                                   class="form-control"
+                                                   value="Removed after moderator review." />
+                                            <button type="submit" class="btn btn-danger">Remove comment</button>
+                                        </form>
+                                    }
+
+                                    <form asp-action="DismissReport" method="post" class="moderation-action-form">
+                                        <input type="hidden" name="reportId" value="@report.Id" />
+                                        <input name="moderatorNotes"
+                                               class="form-control"
+                                               placeholder="Optional moderation note" />
+                                        <button type="submit" class="btn btn-outline-secondary">Dismiss report</button>
+                                    </form>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="forum-card text-center py-5">
+                        <h3 class="h5 fw-bold">No pending reports</h3>
+                        <p class="text-muted mb-0">Reported comments and posts will appear here.</p>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <h2 class="h4 fw-bold mb-3">Recent decisions</h2>
+
+                <div class="forum-card">
+                    @if (Model.ResolvedReports.Any())
+                    {
+                        <div class="resolved-list">
+                            @foreach (var report in Model.ResolvedReports)
+                            {
+                                <div class="resolved-item">
+                                    <span class="badge text-bg-light">@report.Status</span>
+                                    <p class="fw-semibold mb-1">@report.TargetTitle</p>
+                                    <p class="forum-meta mb-0">@report.Reason</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No moderation decisions yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

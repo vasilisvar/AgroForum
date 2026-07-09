@@ -1,0 +1,145 @@
+@model ForumPostDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+    var canModerate = User.IsInRole(UserRoles.Admin) || User.IsInRole(UserRoles.Moderator);
+}
+
+<section class="forum-shell py-5">
+    <div class="container">
+        @if (TempData["ForumMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        @if (TempData["ForumError"] is string error)
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+
+        <div class="mb-4">
+            <a class="text-decoration-none" asp-action="Index">&larr; Back to forum</a>
+        </div>
+
+        <article class="forum-card mb-4">
+            <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+                <div>
+                    <p class="forum-meta mb-2">
+                        Posted by @Model.AuthorName on @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                    </p>
+                    <h1 class="h2 fw-bold mb-0">@Model.Title</h1>
+                </div>
+
+                <div class="d-flex align-items-start gap-2">
+                    @if (Model.IsLocked)
+                    {
+                        <span class="badge text-bg-secondary">Locked</span>
+                    }
+                    <a class="btn btn-outline-danger btn-sm"
+                       asp-action="Report"
+                       asp-route-postId="@Model.Id">Report</a>
+                </div>
+            </div>
+
+            <div class="forum-content mb-4">
+                @Html.Raw(Html.Encode(Model.Content).Replace("\n", "<br />"))
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="forum-tag">
+                        @tag.Name
+                        @if (canModerate)
+                        {
+                            <form asp-controller="Moderation"
+                                  asp-action="RemovePostTag"
+                                  method="post"
+                                  class="d-inline ms-1">
+                                <input type="hidden" name="postId" value="@Model.Id" />
+                                <input type="hidden" name="tagId" value="@tag.Id" />
+                                <button type="submit" class="tag-remove" title="Remove tag">x</button>
+                            </form>
+                        }
+                    </span>
+                }
+            </div>
+
+            @if (canModerate)
+            {
+                <form asp-controller="Moderation"
+                      asp-action="AddPostTag"
+                      method="post"
+                      class="moderator-tag-form mt-4">
+                    <input type="hidden" name="postId" value="@Model.Id" />
+                    <label class="form-label fw-semibold" for="tagName">Moderator tag</label>
+                    <div class="input-group">
+                        <input id="tagName" name="tagName" class="form-control" placeholder="Add tag" />
+                        <button type="submit" class="btn btn-outline-success">Add</button>
+                    </div>
+                </form>
+            }
+        </article>
+
+        <div class="forum-card mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="h4 fw-bold mb-0">Comments</h2>
+                <span class="text-muted">@Model.Comments.Count total</span>
+            </div>
+
+            @if (Model.Comments.Any())
+            {
+                <div class="comment-list">
+                    @foreach (var comment in Model.Comments)
+                    {
+                        <div class="comment-item">
+                            <div class="d-flex justify-content-between gap-3">
+                                <p class="forum-meta mb-2">
+                                    @comment.AuthorName - @comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                </p>
+                                <a class="btn btn-outline-danger btn-sm"
+                                   asp-action="Report"
+                                   asp-route-commentId="@comment.Id">Report</a>
+                            </div>
+                            <p class="mb-0">@comment.Content</p>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No comments yet.</p>
+            }
+        </div>
+
+        <div class="forum-card">
+            <h2 class="h4 fw-bold mb-3">Add a comment</h2>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                @if (Model.IsLocked)
+                {
+                    <p class="text-muted mb-0">This post is locked.</p>
+                }
+                else
+                {
+                    <form asp-action="AddComment" method="post">
+                        <input type="hidden" name="ForumPostId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="Content">Comment</label>
+                            <textarea id="Content" name="Content" class="form-control" rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Post comment</button>
+                    </form>
+                }
+            }
+            else
+            {
+                <p class="mb-0">
+                    <a asp-area="Identity" asp-page="/Account/Login">Log in</a>
+                    to join the discussion.
+                </p>
+            }
+        </div>
+    </div>
+</section>

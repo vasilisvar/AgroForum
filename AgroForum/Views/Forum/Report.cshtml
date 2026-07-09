@@ -1,0 +1,64 @@
+@model ReportContentViewModel
+
+@{
+    ViewData["Title"] = "Report Content";
+}
+
+<section class="forum-shell py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="mb-4">
+                    <a class="text-decoration-none"
+                       asp-action="Details"
+                       asp-route-id="@Model.ReturnForumPostId">&larr; Back to discussion</a>
+                </div>
+
+                <div class="forum-card mb-4">
+                    <p class="text-danger fw-semibold mb-1">Report @Model.TargetType.ToLowerInvariant()</p>
+                    <h1 class="h3 fw-bold">@Model.TargetTitle</h1>
+                    <p class="text-muted mb-0">@Model.TargetPreview</p>
+                </div>
+
+                <form asp-action="Report" method="post" class="forum-card">
+                    <input type="hidden" asp-for="ForumPostId" />
+                    <input type="hidden" asp-for="ForumCommentId" />
+                    <input type="hidden" asp-for="ReturnForumPostId" />
+                    <input type="hidden" asp-for="TargetType" />
+                    <input type="hidden" asp-for="TargetTitle" />
+                    <input type="hidden" asp-for="TargetPreview" />
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Reason" class="form-label fw-semibold"></label>
+                        <select asp-for="Reason" asp-items="Model.ReasonOptions" class="form-select">
+                            <option value="">Select a reason</option>
+                        </select>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Details" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Details"
+                                  class="form-control"
+                                  rows="5"
+                                  placeholder="Explain what should be reviewed by a moderator"></textarea>
+                        <span asp-validation-for="Details" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a class="btn btn-outline-secondary"
+                           asp-action="Details"
+                           asp-route-id="@Model.ReturnForumPostId">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Send report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
