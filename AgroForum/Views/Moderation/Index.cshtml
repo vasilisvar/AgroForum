@@ -1,7 +1,7 @@
 @model ModerationDashboardViewModel
 
 @{
-    ViewData["Title"] = "Moderation";
+    ViewData["Title"] = "Moderator board";
 }
 
 <section class="forum-shell py-5">
@@ -10,80 +10,160 @@
         {
             <div class="alert alert-success">@message</div>
         }
+        @if (TempData["ModerationError"] is string error)
+        {
+            <div class="alert alert-danger">@error</div>
+        }
 
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
             <div>
-                <p class="text-success fw-semibold mb-1">Moderator zone</p>
-                <h1 class="display-6 fw-bold mb-2">Reported content</h1>
-                <p class="text-muted mb-0">Review reported posts and comments, then decide whether they violate the rules.</p>
+                <p class="text-success fw-semibold mb-1">Moderator workspace</p>
+                <h1 class="display-6 fw-bold mb-2">Ticket and content board</h1>
+                <p class="text-muted mb-0">Claim reports, document decisions, and apply reversible content controls.</p>
             </div>
-            <span class="badge text-bg-warning fs-6">@Model.PendingReports.Count pending</span>
+            @if (User.IsInRole(UserRoles.Admin))
+            {
+                <a class="btn btn-dark" asp-controller="Admin" asp-action="Index">Open Admin board</a>
+            }
+        </div>
+
+        <div class="dashboard-stats mb-4">
+            <div class="stat-card"><span>Active tickets</span><strong>@Model.OpenTicketCount</strong></div>
+            <div class="stat-card"><span>Assigned to me</span><strong>@Model.MyTicketCount</strong></div>
+            <div class="stat-card"><span>Resolved today</span><strong>@Model.ResolvedTodayCount</strong></div>
+        </div>
+
+        <div class="forum-card mb-4">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="status">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
+                        <option value="Open" selected="@(Model.StatusFilter == ForumReportStatuses.Open)">Open</option>
+                        <option value="InReview" selected="@(Model.StatusFilter == ForumReportStatuses.InReview)">In review</option>
+                        <option value="Resolved" selected="@(Model.StatusFilter == ForumReportStatuses.Resolved)">Resolved</option>
+                        <option value="Dismissed" selected="@(Model.StatusFilter == ForumReportStatuses.Dismissed)">Dismissed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold" for="targetType">Content</label>
+                    <select id="targetType" name="targetType" class="form-select">
+                        <option value="" selected="@(string.IsNullOrEmpty(Model.TargetTypeFilter))">Posts and comments</option>
+                        <option value="Post" selected="@(Model.TargetTypeFilter == "Post")">Posts</option>
+                        <option value="Comment" selected="@(Model.TargetTypeFilter == "Comment")">Comments</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold" for="assignment">Assignment</label>
+                    <select id="assignment" name="assignment" class="form-select">
+                        <option value="All" selected="@(Model.AssignmentFilter == "All")">All</option>
+                        <option value="Mine" selected="@(Model.AssignmentFilter == "Mine")">Mine</option>
+                        <option value="Unassigned" selected="@(Model.AssignmentFilter == "Unassigned")">Unassigned</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark">Apply filters</button>
+                </div>
+            </form>
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-8">
-                <h2 class="h4 fw-bold mb-3">Pending reports</h2>
+            <div class="col-xl-8">
+                <h2 class="h4 fw-bold mb-3">Tickets</h2>
 
-                @if (Model.PendingReports.Any())
+                @if (Model.Tickets.Any())
                 {
                     <div class="moderation-list">
-                        @foreach (var report in Model.PendingReports)
+                        @foreach (var ticket in Model.Tickets)
                         {
                             <article class="forum-card moderation-card">
                                 <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
                                     <div>
-                                        <span class="badge text-bg-danger mb-2">@report.TargetType report</span>
-                                        <h3 class="h5 fw-bold mb-1">@report.TargetTitle</h3>
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            <span class="badge text-bg-danger">@ticket.TargetType</span>
+                                            <span class="badge ticket-status ticket-status-@ticket.Status.ToLowerInvariant()">@ticket.Status</span>
+                                            <span class="badge text-bg-light">#@ticket.Id</span>
+                                        </div>
+                                        <h3 class="h5 fw-bold mb-1">@ticket.TargetTitle</h3>
                                         <p class="forum-meta mb-0">
-                                            Reported by @report.ReporterName on @report.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                            Reported by @ticket.ReporterName on @ticket.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                                         </p>
+                                        <p class="forum-meta mb-0">Assigned to: @ticket.AssignedModeratorName</p>
                                     </div>
-                                    @if (report.ForumPostId.HasValue)
-                                    {
-                                        <a class="btn btn-outline-secondary btn-sm align-self-start"
-                                           asp-controller="Forum"
-                                           asp-action="Details"
-                                           asp-route-id="@report.ForumPostId">Open discussion</a>
-                                    }
+                                    <div class="d-flex flex-wrap gap-2 align-self-start">
+                                        @if (ticket.ForumPostId.HasValue && !ticket.IsTargetDeleted)
+                                        {
+                                            <a class="btn btn-outline-secondary btn-sm"
+                                               asp-controller="Forum"
+                                               asp-action="Details"
+                                               asp-route-id="@ticket.ForumPostId">Open discussion</a>
+                                        }
+                                        @if (ticket.CanClaim)
+                                        {
+                                            <form asp-action="ClaimReport" method="post">
+                                                <input type="hidden" name="reportId" value="@ticket.Id" />
+                                                <button type="submit" class="btn btn-success btn-sm">Claim ticket</button>
+                                            </form>
+                                        }
+                                        @if (ticket.IsAssignedToCurrentUser && ticket.Status == ForumReportStatuses.InReview)
+                                        {
+                                            <form asp-action="ReleaseReport" method="post">
+                                                <input type="hidden" name="reportId" value="@ticket.Id" />
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm">Release</button>
+                                            </form>
+                                        }
+                                    </div>
                                 </div>
 
                                 <dl class="row mb-3">
                                     <dt class="col-sm-3">Reason</dt>
-                                    <dd class="col-sm-9">@report.Reason</dd>
-
+                                    <dd class="col-sm-9">@ticket.Reason</dd>
                                     <dt class="col-sm-3">Reported text</dt>
-                                    <dd class="col-sm-9">@report.TargetContent</dd>
-
+                                    <dd class="col-sm-9">@ticket.TargetContent</dd>
                                     <dt class="col-sm-3">Author</dt>
-                                    <dd class="col-sm-9">@report.TargetAuthorName</dd>
-
-                                    @if (!string.IsNullOrWhiteSpace(report.Details))
+                                    <dd class="col-sm-9">@ticket.TargetAuthorName</dd>
+                                    @if (!string.IsNullOrWhiteSpace(ticket.Details))
                                     {
                                         <dt class="col-sm-3">Details</dt>
-                                        <dd class="col-sm-9">@report.Details</dd>
+                                        <dd class="col-sm-9">@ticket.Details</dd>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(ticket.ModeratorNotes))
+                                    {
+                                        <dt class="col-sm-3">Decision note</dt>
+                                        <dd class="col-sm-9">@ticket.ModeratorNotes</dd>
                                     }
                                 </dl>
 
-                                <div class="moderation-actions">
-                                    @if (report.TargetType == "Comment" && !report.IsTargetDeleted)
-                                    {
-                                        <form asp-action="RemoveComment" method="post" class="moderation-action-form">
-                                            <input type="hidden" name="reportId" value="@report.Id" />
-                                            <input name="deletionReason"
-                                                   class="form-control"
-                                                   value="Removed after moderator review." />
-                                            <button type="submit" class="btn btn-danger">Remove comment</button>
-                                        </form>
-                                    }
+                                @if (ticket.CanHandle && ForumReportStatuses.Active.Contains(ticket.Status))
+                                {
+                                    <div class="moderation-actions">
+                                        @if (!ticket.IsTargetDeleted)
+                                        {
+                                            <form asp-action="@(ticket.TargetType == "Comment" ? "RemoveComment" : "RemovePost")" method="post" class="moderation-action-form">
+                                                <input type="hidden" name="reportId" value="@ticket.Id" />
+                                                <input name="deletionReason" class="form-control" placeholder="Required deletion reason" required maxlength="500" />
+                                                <button type="submit" class="btn btn-danger">Soft-delete @ticket.TargetType.ToLowerInvariant()</button>
+                                            </form>
+                                        }
 
-                                    <form asp-action="DismissReport" method="post" class="moderation-action-form">
-                                        <input type="hidden" name="reportId" value="@report.Id" />
-                                        <input name="moderatorNotes"
-                                               class="form-control"
-                                               placeholder="Optional moderation note" />
-                                        <button type="submit" class="btn btn-outline-secondary">Dismiss report</button>
-                                    </form>
-                                </div>
+                                        <form asp-action="SetPostLock" method="post" class="moderation-action-form">
+                                            <input type="hidden" name="reportId" value="@ticket.Id" />
+                                            <input type="hidden" name="isLocked" value="@((!ticket.IsPostLocked).ToString().ToLowerInvariant())" />
+                                            <input name="reason" class="form-control" placeholder="Required lock/unlock reason" required maxlength="1000" />
+                                            <button type="submit" class="btn btn-outline-warning">@(ticket.IsPostLocked ? "Unlock discussion" : "Lock discussion")</button>
+                                        </form>
+
+                                        <form asp-action="DismissReport" method="post" class="moderation-action-form">
+                                            <input type="hidden" name="reportId" value="@ticket.Id" />
+                                            <input name="moderatorNotes" class="form-control" placeholder="Required dismissal note" required maxlength="1000" />
+                                            <button type="submit" class="btn btn-outline-secondary">Dismiss ticket</button>
+                                        </form>
+                                    </div>
+                                }
+                                else if (ForumReportStatuses.Active.Contains(ticket.Status) && !ticket.CanClaim)
+                                {
+                                    <div class="alert alert-light border mb-0">Claim this ticket, or ask an Admin to reassign it, before taking action.</div>
+                                }
                             </article>
                         }
                     </div>
@@ -91,25 +171,45 @@
                 else
                 {
                     <div class="forum-card text-center py-5">
-                        <h3 class="h5 fw-bold">No pending reports</h3>
-                        <p class="text-muted mb-0">Reported comments and posts will appear here.</p>
+                        <h3 class="h5 fw-bold">No matching tickets</h3>
+                        <p class="text-muted mb-0">Try a different status, content, or assignment filter.</p>
                     </div>
                 }
             </div>
 
-            <div class="col-lg-4">
-                <h2 class="h4 fw-bold mb-3">Recent decisions</h2>
-
-                <div class="forum-card">
-                    @if (Model.ResolvedReports.Any())
+            <aside class="col-xl-4">
+                <h2 class="h4 fw-bold mb-3">My recent activity</h2>
+                <div class="forum-card mb-4">
+                    @if (Model.RecentActivity.Any())
                     {
-                        <div class="resolved-list">
-                            @foreach (var report in Model.ResolvedReports)
+                        <div class="activity-list">
+                            @foreach (var action in Model.RecentActivity)
                             {
-                                <div class="resolved-item">
-                                    <span class="badge text-bg-light">@report.Status</span>
-                                    <p class="fw-semibold mb-1">@report.TargetTitle</p>
-                                    <p class="forum-meta mb-0">@report.Reason</p>
+                                <div class="activity-item">
+                                    <p class="fw-semibold mb-1">@action.ActionType</p>
+                                    <p class="forum-meta mb-1">@action.TargetType · @action.TargetDisplay</p>
+                                    <p class="forum-meta mb-0">@action.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Your audited actions will appear here.</p>
+                    }
+                </div>
+
+                <h2 class="h4 fw-bold mb-3">Recent decisions</h2>
+                <div class="forum-card">
+                    @if (Model.RecentDecisions.Any())
+                    {
+                        <div class="activity-list">
+                            @foreach (var ticket in Model.RecentDecisions)
+                            {
+                                <div class="activity-item">
+                                    <span class="badge ticket-status ticket-status-@ticket.Status.ToLowerInvariant()">@ticket.Status</span>
+                                    <p class="fw-semibold mb-1 mt-2">#@ticket.Id · @ticket.TargetTitle</p>
+                                    <p class="forum-meta mb-0">By @(ticket.ReviewerName ?? "Unknown reviewer")</p>
                                 </div>
                             }
                         </div>
@@ -119,7 +219,7 @@
                         <p class="text-muted mb-0">No moderation decisions yet.</p>
                     }
                 </div>
-            </div>
+            </aside>
         </div>
     </div>
 </section>

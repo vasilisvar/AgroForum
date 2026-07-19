@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using AgroForum.Constants;
 using AgroForum.Data;
 using AgroForum.Helpers;
 using AgroForum.Models;
@@ -51,8 +52,11 @@ namespace AgroForum.Controllers
             }
 
             var posts = await postsQuery
-                .OrderByDescending(post => post.CreatedAt)
+                .OrderByDescending(post => post.IsPinned)
+                .ThenByDescending(post => post.CreatedAt)
                 .ToListAsync();
+
+            var moderatorIds = await GetModeratorIdsAsync(posts.Select(post => post.AuthorId));
 
             var availableTags = await _context.ForumTags
                 .AsNoTracking()
@@ -72,7 +76,9 @@ namespace AgroForum.Controllers
                     Preview = BuildPreview(post.Content),
                     AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
                     IsAnonymous = post.IsAnonymous,
+                    IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                     IsLocked = post.IsLocked,
+                    IsPinned = post.IsPinned,
                     CreatedAt = post.CreatedAt,
                     CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
                     FavoriteCount = post.Favorites.Count,
@@ -103,6 +109,9 @@ namespace AgroForum.Controllers
                 return NotFound();
             }
 
+            var moderatorIds = await GetModeratorIdsAsync(
+                post.Comments.Select(comment => comment.AuthorId).Append(post.AuthorId));
+
             var model = new ForumPostDetailsViewModel
             {
                 Id = post.Id,
@@ -110,7 +119,9 @@ namespace AgroForum.Controllers
                 Content = post.Content,
                 AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
                 IsAnonymous = post.IsAnonymous,
+                IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                 IsLocked = post.IsLocked,
+                IsPinned = post.IsPinned,
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 Tags = post.PostTags
@@ -130,6 +141,7 @@ namespace AgroForum.Controllers
                         Id = comment.Id,
                         Content = comment.Content,
                         AuthorName = GetDisplayName(comment.Author, isAnonymous: false),
+                        IsAuthorModerator = moderatorIds.Contains(comment.AuthorId),
                         CreatedAt = comment.CreatedAt,
                         UpdatedAt = comment.UpdatedAt,
                         IsDeleted = comment.IsDeleted,
@@ -273,7 +285,7 @@ namespace AgroForum.Controllers
             var existingReport = await _context.ForumReports
                 .AnyAsync(report =>
                     report.ReporterId == userId &&
-                    report.Status == ForumReportStatuses.Pending &&
+                    ForumReportStatuses.Active.Contains(report.Status) &&
                     report.ForumPostId == model.ForumPostId &&
                     report.ForumCommentId == model.ForumCommentId);
 
@@ -290,7 +302,7 @@ namespace AgroForum.Controllers
                 ReporterId = userId,
                 Reason = model.Reason.Trim(),
                 Details = model.Details?.Trim(),
-                Status = ForumReportStatuses.Pending,
+                Status = ForumReportStatuses.Open,
                 CreatedAt = DateTime.UtcNow
             });
 
@@ -324,6 +336,25 @@ namespace AgroForum.Controllers
                     ForumTag = tag
                 });
             }
+        }
+
+        private async Task<HashSet<string>> GetModeratorIdsAsync(IEnumerable<string> userIds)
+        {
+            var ids = userIds.Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return new HashSet<string>();
+            }
+
+            var normalizedRoleName = _userManager.NormalizeName(UserRoles.Moderator);
+            var moderatorIds = await (
+                from userRole in _context.UserRoles
+                join role in _context.Roles on userRole.RoleId equals role.Id
+                where ids.Contains(userRole.UserId) && role.NormalizedName == normalizedRoleName
+                select userRole.UserId)
+                .ToListAsync();
+
+            return moderatorIds.ToHashSet();
         }
 
         private async Task<ReportContentViewModel?> BuildReportContentModelAsync(int? postId, int? commentId)

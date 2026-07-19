@@ -28,9 +28,15 @@ namespace AgroForum.Models.Forum
 
         [Required]
         [MaxLength(30)]
-        public string Status { get; set; } = ForumReportStatuses.Pending;
+        public string Status { get; set; } = ForumReportStatuses.Open;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? AssignedAt { get; set; }
+
+        public string? AssignedToId { get; set; }
+
+        public ApplicationUser? AssignedTo { get; set; }
 
         public DateTime? ReviewedAt { get; set; }
 
@@ -40,5 +46,8 @@ namespace AgroForum.Models.Forum
 
         [MaxLength(1000)]
         public string? ModeratorNotes { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     }
 }

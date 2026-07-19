@@ -22,6 +22,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 var app = builder.Build();
 
 await SeedRolesAsync(app);
+await BootstrapAdminAsync(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -62,5 +63,23 @@ static async Task SeedRolesAsync(WebApplication app)
         {
             await roleManager.CreateAsync(new IdentityRole(role));
         }
+    }
+}
+
+static async Task BootstrapAdminAsync(WebApplication app)
+{
+    var bootstrapEmail = app.Configuration["BootstrapAdmin:Email"]?.Trim();
+    if (string.IsNullOrWhiteSpace(bootstrapEmail))
+    {
+        return;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var user = await userManager.FindByEmailAsync(bootstrapEmail);
+
+    if (user != null && !await userManager.IsInRoleAsync(user, UserRoles.Admin))
+    {
+        await userManager.AddToRoleAsync(user, UserRoles.Admin);
     }
 }

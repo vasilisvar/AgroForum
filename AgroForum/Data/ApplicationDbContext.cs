@@ -1,5 +1,6 @@
 using AgroForum.Models;
 using AgroForum.Models.Forum;
+using AgroForum.Models.Moderation;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ namespace AgroForum.Data
         public DbSet<ForumPostLike> ForumPostLikes { get; set; }
         public DbSet<ForumPostFavorite> ForumPostFavorites { get; set; }
         public DbSet<ForumReport> ForumReports { get; set; }
+        public DbSet<ModerationAction> ModerationActions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -151,6 +153,9 @@ namespace AgroForum.Data
                 entity.Property(r => r.ModeratorNotes)
                     .HasMaxLength(1000);
 
+                entity.Property(r => r.RowVersion)
+                    .IsRowVersion();
+
                 entity.HasIndex(r => new { r.Status, r.CreatedAt });
 
                 entity.HasOne(r => r.ForumPost)
@@ -171,6 +176,39 @@ namespace AgroForum.Data
                 entity.HasOne(r => r.ReviewedBy)
                     .WithMany()
                     .HasForeignKey(r => r.ReviewedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.AssignedTo)
+                    .WithMany()
+                    .HasForeignKey(r => r.AssignedToId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<ModerationAction>(entity =>
+            {
+                entity.Property(a => a.ActionType)
+                    .IsRequired()
+                    .HasMaxLength(80);
+
+                entity.Property(a => a.TargetType)
+                    .IsRequired()
+                    .HasMaxLength(40);
+
+                entity.Property(a => a.TargetId)
+                    .HasMaxLength(450);
+
+                entity.Property(a => a.TargetDisplay)
+                    .HasMaxLength(200);
+
+                entity.Property(a => a.Details)
+                    .HasMaxLength(1000);
+
+                entity.HasIndex(a => new { a.ActorId, a.CreatedAt });
+                entity.HasIndex(a => a.ForumReportId);
+
+                entity.HasOne(a => a.Actor)
+                    .WithMany()
+                    .HasForeignKey(a => a.ActorId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }
