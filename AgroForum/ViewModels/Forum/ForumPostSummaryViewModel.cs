@@ -12,7 +12,11 @@ namespace AgroForum.ViewModels.Forum
 
         public bool IsAnonymous { get; set; }
 
+        public bool IsAuthorModerator { get; set; }
+
         public bool IsLocked { get; set; }
+
+        public bool IsPinned { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

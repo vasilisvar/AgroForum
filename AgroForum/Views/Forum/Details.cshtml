@@ -25,7 +25,12 @@
             <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
                 <div>
                     <p class="forum-meta mb-2">
-                        Posted by @Model.AuthorName on @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                        Posted by @Model.AuthorName
+                        @if (Model.IsAuthorModerator)
+                        {
+                            <span class="moderator-badge">Moderator</span>
+                        }
+                        on @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                     </p>
                     <h1 class="h2 fw-bold mb-0">@Model.Title</h1>
                 </div>
@@ -34,6 +39,10 @@
                     @if (Model.IsLocked)
                     {
                         <span class="badge text-bg-secondary">Locked</span>
+                    }
+                    @if (Model.IsPinned)
+                    {
+                        <span class="badge text-bg-success">Pinned</span>
                     }
                     <a class="btn btn-outline-danger btn-sm"
                        asp-action="Report"
@@ -95,7 +104,12 @@
                         <div class="comment-item">
                             <div class="d-flex justify-content-between gap-3">
                                 <p class="forum-meta mb-2">
-                                    @comment.AuthorName - @comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                    @comment.AuthorName
+                                    @if (comment.IsAuthorModerator)
+                                    {
+                                        <span class="moderator-badge">Moderator</span>
+                                    }
+                                    - @comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                                 </p>
                                 <a class="btn btn-outline-danger btn-sm"
                                    asp-action="Report"

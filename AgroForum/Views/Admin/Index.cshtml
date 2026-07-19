@@ -1,0 +1,279 @@
+@model AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin board";
+}
+
+<section class="forum-shell py-5">
+    <div class="container">
+        @if (TempData["AdminMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+        @if (TempData["AdminError"] is string error)
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+            <div>
+                <p class="text-success fw-semibold mb-1">Administration</p>
+                <h1 class="display-6 fw-bold mb-2">Admin oversight board</h1>
+                <p class="text-muted mb-0">Manage moderator access, supervise tickets, control the feed, and inspect the audit trail.</p>
+            </div>
+            <a class="btn btn-outline-dark" asp-controller="Moderation" asp-action="Index">Open Moderator board</a>
+        </div>
+
+        <div class="dashboard-stats mb-5">
+            <div class="stat-card"><span>Registered users</span><strong>@Model.TotalUsers</strong></div>
+            <div class="stat-card"><span>Moderators</span><strong>@Model.ModeratorCount</strong></div>
+            <div class="stat-card"><span>Active tickets</span><strong>@Model.ActiveTicketCount</strong></div>
+            <div class="stat-card"><span>Deleted items</span><strong>@Model.DeletedContentCount</strong></div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-xl-7">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h4 fw-bold mb-0">Users and moderator access</h2>
+                    <span class="text-muted small">Showing up to 50 accounts</span>
+                </div>
+                <div class="forum-card mb-3">
+                    <form method="get" class="d-flex gap-2">
+                        <input name="search" value="@Model.Search" class="form-control" placeholder="Search name, username, or email" />
+                        <button type="submit" class="btn btn-dark">Search</button>
+                    </form>
+                </div>
+
+                <div class="admin-list">
+                    @foreach (var user in Model.Users)
+                    {
+                        <article class="forum-card admin-user-row">
+                            <div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <h3 class="h6 fw-bold mb-0">@user.DisplayName</h3>
+                                    @if (user.IsAdmin)
+                                    {
+                                        <span class="badge text-bg-dark">Admin</span>
+                                    }
+                                    @if (user.IsModerator)
+                                    {
+                                        <span class="moderator-badge">Moderator</span>
+                                    }
+                                </div>
+                                <p class="forum-meta mb-0">@user.Email · Joined @user.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
+                            </div>
+                            <form asp-action="@(user.IsModerator ? "RevokeModerator" : "GrantModerator")" method="post" class="role-action-form">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <input name="reason" class="form-control form-control-sm" placeholder="Required role-change reason" required maxlength="1000" />
+                                <button type="submit" class="btn btn-sm @(user.IsModerator ? "btn-outline-danger" : "btn-success")">
+                                    @(user.IsModerator ? "Revoke Moderator" : "Grant Moderator")
+                                </button>
+                            </form>
+                        </article>
+                    }
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <h2 class="h4 fw-bold mb-3">Moderator activity summary</h2>
+                <div class="forum-card table-responsive">
+                    @if (Model.Moderators.Any())
+                    {
+                        <table class="table align-middle mb-0">
+                            <thead><tr><th>Moderator</th><th>Active</th><th>Decisions</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            @foreach (var moderator in Model.Moderators)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold">@moderator.DisplayName</span>
+                                        <span class="d-block forum-meta">Last: @(moderator.LastActiveAt?.ToLocalTime().ToString("dd MMM HH:mm") ?? "No activity")</span>
+                                    </td>
+                                    <td>@moderator.ActiveTicketCount</td>
+                                    <td>@moderator.ResolvedTicketCount</td>
+                                    <td>@moderator.ActionCount</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No moderators have been assigned yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-xl-7">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4 fw-bold mb-0">Active ticket oversight</h2>
+                    <a asp-controller="Moderation" asp-action="Index" class="btn btn-outline-secondary btn-sm">Full queue</a>
+                </div>
+                <div class="admin-list">
+                    @if (Model.ActiveTickets.Any())
+                    {
+                        @foreach (var ticket in Model.ActiveTickets)
+                        {
+                            <article class="forum-card">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                                    <div>
+                                        <span class="badge text-bg-danger">@ticket.TargetType</span>
+                                        <span class="badge ticket-status ticket-status-@ticket.Status.ToLowerInvariant()">@ticket.Status</span>
+                                        <span class="badge text-bg-light">#@ticket.Id</span>
+                                    </div>
+                                    <span class="forum-meta">@ticket.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                                </div>
+                                <h3 class="h6 fw-bold">@ticket.TargetTitle</h3>
+                                <p class="mb-2">@ticket.Reason</p>
+                                <p class="forum-meta">Currently assigned to: @ticket.AssignedModeratorName</p>
+                                <form asp-action="ReassignTicket" method="post" class="admin-action-form">
+                                    <input type="hidden" name="reportId" value="@ticket.Id" />
+                                    <select name="moderatorId" class="form-select" required>
+                                        <option value="">Choose moderator</option>
+                                        @foreach (var moderator in Model.Moderators)
+                                        {
+                                            <option value="@moderator.Id" selected="@(ticket.AssignedToId == moderator.Id)">@moderator.DisplayName</option>
+                                        }
+                                    </select>
+                                    <input name="reason" class="form-control" placeholder="Required assignment reason" required maxlength="1000" />
+                                    <button type="submit" class="btn btn-dark">Assign</button>
+                                </form>
+                            </article>
+                        }
+                    }
+                    else
+                    {
+                        <div class="forum-card"><p class="text-muted mb-0">There are no active tickets.</p></div>
+                    }
+                </div>
+
+                <h3 class="h5 fw-bold mt-4 mb-3">Recent completed tickets</h3>
+                <div class="admin-list">
+                    @if (Model.RecentCompletedTickets.Any())
+                    {
+                        @foreach (var ticket in Model.RecentCompletedTickets)
+                        {
+                            <article class="forum-card">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                                    <div>
+                                        <span class="badge text-bg-danger">@ticket.TargetType</span>
+                                        <span class="badge ticket-status ticket-status-@ticket.Status.ToLowerInvariant()">@ticket.Status</span>
+                                        <span class="badge text-bg-light">#@ticket.Id</span>
+                                    </div>
+                                    <span class="forum-meta">Handled by @ticket.AssignedModeratorName</span>
+                                </div>
+                                <h4 class="h6 fw-bold">@ticket.TargetTitle</h4>
+                                <p class="forum-meta mb-2">@ticket.Reason</p>
+                                <form asp-action="ReopenTicket" method="post" class="restore-form">
+                                    <input type="hidden" name="reportId" value="@ticket.Id" />
+                                    <input name="reason" class="form-control form-control-sm" placeholder="Required reopen reason" required maxlength="1000" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Reopen</button>
+                                </form>
+                            </article>
+                        }
+                    }
+                    else
+                    {
+                        <div class="forum-card"><p class="text-muted mb-0">No completed tickets yet.</p></div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <h2 class="h4 fw-bold mb-3">Deleted content</h2>
+                <div class="forum-card">
+                    @if (Model.DeletedContent.Any())
+                    {
+                        <div class="activity-list">
+                            @foreach (var item in Model.DeletedContent)
+                            {
+                                <div class="activity-item">
+                                    <span class="badge text-bg-secondary">@item.TargetType #@item.TargetId</span>
+                                    <p class="fw-semibold mb-1 mt-2">@item.TargetDisplay</p>
+                                    <p class="forum-meta mb-2">@item.DeletionReason</p>
+                                    <form asp-action="@(item.TargetType == "Post" ? "RestorePost" : "RestoreComment")" method="post" class="restore-form">
+                                        <input type="hidden" name="@(item.TargetType == "Post" ? "postId" : "commentId")" value="@item.TargetId" />
+                                        <input name="reason" class="form-control form-control-sm" placeholder="Required restoration reason" required maxlength="1000" />
+                                        <button type="submit" class="btn btn-outline-success btn-sm">Restore</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">There is no deleted content to restore.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <h2 class="h4 fw-bold mb-3">Feed and content controls</h2>
+            <div class="admin-list">
+                @foreach (var post in Model.RecentPosts)
+                {
+                    <article class="forum-card admin-content-row">
+                        <div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
+                                <h3 class="h6 fw-bold mb-0">@post.Title</h3>
+                                @if (post.IsPinned) { <span class="badge text-bg-success">Pinned</span> }
+                                @if (post.IsLocked) { <span class="badge text-bg-warning">Locked</span> }
+                            </div>
+                            <p class="forum-meta mb-0">@post.AuthorName · @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</p>
+                        </div>
+                        <div class="admin-content-actions">
+                            <form asp-action="SetPinned" method="post" class="compact-action-form">
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="isPinned" value="@((!post.IsPinned).ToString().ToLowerInvariant())" />
+                                <input name="reason" class="form-control form-control-sm" placeholder="Required reason" required maxlength="1000" />
+                                <button type="submit" class="btn btn-sm btn-outline-success">@(post.IsPinned ? "Unpin" : "Pin")</button>
+                            </form>
+                            <form asp-action="SetPostLock" method="post" class="compact-action-form">
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="isLocked" value="@((!post.IsLocked).ToString().ToLowerInvariant())" />
+                                <input name="reason" class="form-control form-control-sm" placeholder="Required reason" required maxlength="1000" />
+                                <button type="submit" class="btn btn-sm btn-outline-warning">@(post.IsLocked ? "Unlock" : "Lock")</button>
+                            </form>
+                            <form asp-action="RemovePost" method="post" class="compact-action-form">
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input name="reason" class="form-control form-control-sm" placeholder="Required deletion reason" required maxlength="500" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Soft-delete</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+
+        <div>
+            <h2 class="h4 fw-bold mb-3">Complete moderation audit</h2>
+            <div class="forum-card table-responsive">
+                @if (Model.Activity.Any())
+                {
+                    <table class="table align-middle mb-0">
+                        <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+                        <tbody>
+                        @foreach (var action in Model.Activity)
+                        {
+                            <tr>
+                                <td class="text-nowrap">@action.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                                <td>@action.ActorName</td>
+                                <td>@action.ActionType</td>
+                                <td>@action.TargetType · @action.TargetDisplay</td>
+                                <td>@action.Details</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Audited moderator and Admin actions will appear here.</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

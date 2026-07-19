@@ -26,6 +26,24 @@ namespace AgroForum.ViewModels.Forum
 
         public DateTime CreatedAt { get; set; }
 
+        public DateTime? AssignedAt { get; set; }
+
+        public DateTime? ReviewedAt { get; set; }
+
+        public string AssignedModeratorName { get; set; } = "Unassigned";
+
+        public string? ReviewerName { get; set; }
+
+        public string? ModeratorNotes { get; set; }
+
+        public bool IsAssignedToCurrentUser { get; set; }
+
+        public bool CanHandle { get; set; }
+
+        public bool CanClaim { get; set; }
+
+        public bool IsPostLocked { get; set; }
+
         public bool IsTargetDeleted { get; set; }
     }
 }

@@ -20,6 +20,8 @@ namespace AgroForum.Models.Forum
 
         public bool IsLocked { get; set; } = false;
 
+        public bool IsPinned { get; set; } = false;
+
         public DateTime? DeletedAt { get; set; }
 
         public string? DeletedByUserId { get; set; }

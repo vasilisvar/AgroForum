@@ -76,6 +76,11 @@
                                        asp-action="Details"
                                        asp-route-id="@post.Id">@post.Title</a>
                                 </h2>
+
+                                @if (post.IsPinned)
+                                {
+                                    <span class="badge text-bg-success me-1">Pinned</span>
+                                }
                             </div>
 
                             @if (post.IsLocked)
@@ -85,7 +90,12 @@
                         </div>
 
                         <p class="forum-meta mb-2">
-                            Posted by @post.AuthorName on @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                            Posted by @post.AuthorName
+                            @if (post.IsAuthorModerator)
+                            {
+                                <span class="moderator-badge">Moderator</span>
+                            }
+                            on @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                         </p>
 
                         <p class="text-muted mb-3">@post.Preview</p>
