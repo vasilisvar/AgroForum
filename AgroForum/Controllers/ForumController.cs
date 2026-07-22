@@ -210,13 +210,13 @@ namespace AgroForum.Controllers
             if (post.IsLocked)
             {
                 TempData["ForumError"] = "This post is locked, so new comments are not allowed.";
-                return RedirectToAction(nameof(Details), new { id = post.Id });
+                return RedirectToAction(nameof(Details), null, new { id = post.Id }, "add-comment");
             }
 
             if (!ModelState.IsValid)
             {
                 TempData["ForumError"] = "Please write a valid comment before submitting.";
-                return RedirectToAction(nameof(Details), new { id = post.Id });
+                return RedirectToAction(nameof(Details), null, new { id = post.Id }, "add-comment");
             }
 
             var userId = _userManager.GetUserId(User);
@@ -237,7 +237,7 @@ namespace AgroForum.Controllers
             await _context.SaveChangesAsync();
 
             TempData["ForumMessage"] = "Your comment has been added.";
-            return RedirectToAction(nameof(Details), new { id = post.Id });
+            return RedirectToAction(nameof(Details), null, new { id = post.Id }, "comments");
         }
 
         [Authorize]

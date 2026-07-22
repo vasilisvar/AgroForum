@@ -98,10 +98,26 @@
                             on @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                         </p>
 
-                        <p class="text-muted mb-3">@post.Preview</p>
+                        <p class="forum-post-preview text-muted mb-3">@post.Preview</p>
 
-                        <div class="d-flex flex-wrap gap-3 forum-meta">
-                            <span>@post.CommentCount comments</span>
+                        <div class="d-flex flex-wrap align-items-center gap-3 forum-meta">
+                            <a class="btn btn-success btn-sm"
+                               asp-action="Details"
+                               asp-route-id="@post.Id">Read full post</a>
+                            @if (post.CommentCount > 0)
+                            {
+                                <a class="btn btn-outline-success btn-sm"
+                                   asp-action="Details"
+                                   asp-route-id="@post.Id"
+                                   asp-fragment="comments">See all comments (@post.CommentCount)</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-outline-success btn-sm"
+                                   asp-action="Details"
+                                   asp-route-id="@post.Id"
+                                   asp-fragment="add-comment">Be the first to comment</a>
+                            }
                             <span>@post.FavoriteCount favorites</span>
                             @if (post.IsAnonymous)
                             {

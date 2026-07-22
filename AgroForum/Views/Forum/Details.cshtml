@@ -32,7 +32,7 @@
                         }
                         on @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                     </p>
-                    <h1 class="h2 fw-bold mb-0">@Model.Title</h1>
+                    <h1 class="post-detail-title h2 fw-bold mb-0">@Model.Title</h1>
                 </div>
 
                 <div class="d-flex align-items-start gap-2">
@@ -90,7 +90,7 @@
             }
         </article>
 
-        <div class="forum-card mb-4">
+        <div id="comments" class="forum-card mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h2 class="h4 fw-bold mb-0">Comments</h2>
                 <span class="text-muted">@Model.Comments.Count total</span>
@@ -115,7 +115,7 @@
                                    asp-action="Report"
                                    asp-route-commentId="@comment.Id">Report</a>
                             </div>
-                            <p class="mb-0">@comment.Content</p>
+                            <p class="comment-content mb-0">@comment.Content</p>
                         </div>
                     }
                 </div>
@@ -126,7 +126,7 @@
             }
         </div>
 
-        <div class="forum-card">
+        <div id="add-comment" class="forum-card">
             <h2 class="h4 fw-bold mb-3">Add a comment</h2>
 
             @if (User.Identity?.IsAuthenticated == true)
@@ -141,7 +141,15 @@
                         <input type="hidden" name="ForumPostId" value="@Model.Id" />
                         <div class="mb-3">
                             <label class="form-label fw-semibold" for="Content">Comment</label>
-                            <textarea id="Content" name="Content" class="form-control" rows="4"></textarea>
+                            <textarea id="Content"
+                                      name="Content"
+                                      class="form-control"
+                                      rows="4"
+                                      required
+                                      minlength="2"
+                                      maxlength="3000"
+                                      aria-describedby="commentHelp"></textarea>
+                            <div id="commentHelp" class="form-text">Enter between 2 and 3,000 characters.</div>
                         </div>
                         <button type="submit" class="btn btn-success">Post comment</button>
                     </form>

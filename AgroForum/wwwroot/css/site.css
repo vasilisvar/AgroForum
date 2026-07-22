@@ -1,5 +1,6 @@
 html {
   font-size: 14px;
+  scroll-behavior: smooth;
 }
 
 @media (min-width: 768px) {
@@ -40,6 +41,17 @@ html {
 body {
     background-color: var(--agro-background);
     color: var(--agro-dark);
+}
+
+#comments,
+#add-comment {
+    scroll-margin-top: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
 }
 
 .navbar-brand {
@@ -142,6 +154,7 @@ body {
 .forum-post-title {
     color: var(--agro-dark);
     text-decoration: none;
+    overflow-wrap: anywhere;
 }
 
 .forum-post-title:hover {
@@ -157,6 +170,12 @@ body {
     color: #26342c;
     font-size: 1.05rem;
     line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.forum-post-preview,
+.post-detail-title {
+    overflow-wrap: anywhere;
 }
 
 .forum-tag {
@@ -190,13 +209,20 @@ body {
 }
 
 .comment-item {
-    padding: 1rem 0;
-    border-top: 1px solid var(--agro-border);
+    padding: 1rem;
+    border: 1px solid var(--agro-border);
+    border-radius: 0.75rem;
+    background-color: #fbfdfb;
 }
 
 .comment-item:first-child {
-    padding-top: 0;
-    border-top: 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--agro-border);
+}
+
+.comment-content {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 .moderator-tag-form {
