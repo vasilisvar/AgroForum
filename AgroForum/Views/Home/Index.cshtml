@@ -1,105 +1,164 @@
+@model HomeIndexViewModel
+
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Grow knowledge. Cultivate community.";
 }
 
-<section class="hero-section">
+<section class="home-hero">
     <div class="container">
-        <div class="row align-items-center min-vh-75">
-            <div class="col-lg-7 py-5">
-                <span class="hero-badge">
-                    Agricultural Knowledge Community
-                </span>
-
-                <h1 class="display-4 fw-bold mt-3 mb-3">
-                    Knowledge grows when
-                    <span class="text-success">communities connect.</span>
-                </h1>
-
-                <p class="lead text-muted mb-4 hero-description">
-                    AgroForum is a discussion platform where farmers can ask
-                    questions, share practical experiences, and connect with
-                    agricultural experts.
+        <div class="home-hero-grid">
+            <div class="home-hero-copy">
+                <span class="eyebrow">Agricultural knowledge, shared</span>
+                <h1>Grow knowledge.<br /><span>Cultivate community.</span></h1>
+                <p>
+                    A friendly space for farmers, agronomists, and agricultural enthusiasts
+                    to exchange experience, solve practical problems, and grow together.
                 </p>
-
-                <div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-success btn-lg px-4"
-                       asp-controller="Forum"
-                       asp-action="Index">
-                        Explore Forum
+                <div class="hero-actions">
+                    <a class="btn btn-agro btn-lg" asp-controller="Forum" asp-action="Index">
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.4-4.2A8 8 0 1 1 21 12Z" /></svg>
+                        Explore discussions
                     </a>
-
-                    <a class="btn btn-outline-dark btn-lg px-4"
-                       asp-area="Identity"
-                       asp-page="/Account/Register">
-                        Create Account
-                    </a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="btn btn-agro-outline btn-lg" asp-controller="Forum" asp-action="Create">
+                            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+                            Ask a question
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-agro-outline btn-lg" asp-area="Identity" asp-page="/Account/Register">
+                            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+                            Join the community
+                        </a>
+                    }
                 </div>
             </div>
 
-            <div class="col-lg-5 py-5">
-                <div class="feature-card">
-                    <h2 class="h4 fw-bold mb-4">
-                        Built for agricultural communities
-                    </h2>
-
-                    <div class="feature-item">
-                        <div class="feature-icon">01</div>
-                        <div>
-                            <h3 class="h6 fw-bold mb-1">Ask practical questions</h3>
-                            <p class="text-muted mb-0">
-                                Share real agricultural challenges with the community.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="feature-icon">02</div>
-                        <div>
-                            <h3 class="h6 fw-bold mb-1">Connect with experts</h3>
-                            <p class="text-muted mb-0">
-                                Identify contributions from verified agricultural experts.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="feature-icon">03</div>
-                        <div>
-                            <h3 class="h6 fw-bold mb-1">Share knowledge safely</h3>
-                            <p class="text-muted mb-0">
-                                Participate in a moderated and spam-protected environment.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+            <div class="farm-illustration" aria-hidden="true">
+                <svg viewBox="0 0 760 430" role="img">
+                    <defs>
+                        <linearGradient id="hillBack" x1="0" x2="1">
+                            <stop offset="0" stop-color="#72b66a" />
+                            <stop offset="1" stop-color="#3f8f4d" />
+                        </linearGradient>
+                        <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#91c94f" />
+                            <stop offset="1" stop-color="#4f9d42" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="392" cy="82" r="40" fill="#f2bf3f" />
+                    <g fill="none" stroke="#e9b949" stroke-width="7" stroke-linecap="round">
+                        <path d="M392 22v-15M392 157v-15M332 82h-15M467 82h-15M349 39l-11-11M446 136l-11-11M435 39l11-11M338 136l11-11" />
+                    </g>
+                    <path d="M16 244c116-91 188-92 296-19 102-88 235-103 432 13v95H16Z" fill="#a9d87d" />
+                    <path d="M0 294c113-84 223-86 354-8 132-102 251-99 406 4v140H0Z" fill="url(#hillBack)" />
+                    <path d="M0 340c164-54 308-41 430 30 117-68 220-68 330-21v81H0Z" fill="url(#field)" />
+                    <path d="M463 214h137v108H463Z" fill="#d65b35" />
+                    <path d="m445 222 87-67 88 67Z" fill="#7a4934" />
+                    <path d="M521 257h39v65h-39Z" fill="#f7f4e8" />
+                    <path d="M471 240h27v29h-27Z" fill="#f5e6b7" />
+                    <path d="M569 240h27v29h-27Z" fill="#f5e6b7" />
+                    <path d="M608 177h28v145h-28Z" fill="#c7d0c9" />
+                    <path d="M604 177h36l-7-24h-22Z" fill="#9ca9a0" />
+                    <g fill="#287a38">
+                        <circle cx="661" cy="215" r="41" /><circle cx="706" cy="246" r="33" /><circle cx="93" cy="275" r="31" /><circle cx="137" cy="260" r="24" />
+                    </g>
+                    <g stroke="#286d36" stroke-width="7" stroke-linecap="round">
+                        <path d="M661 244v91M706 269v69M93 296v61M137 278v65" />
+                    </g>
+                    <g fill="#e9b949">
+                        <path d="M612 337c8-31 15-31 23 0-8 6-16 6-23 0Zm35 7c8-31 15-31 23 0-8 6-16 6-23 0Zm35 7c8-31 15-31 23 0-8 6-16 6-23 0Z" />
+                    </g>
+                    <g fill="#247c36">
+                        <path d="M70 421c3-78 18-117 45-118-4 64-19 103-45 118Zm43 0c0-72 17-109 51-112-5 61-22 98-51 112Zm69 0c-1-72 17-107 52-107-7 58-24 94-52 107Z" />
+                    </g>
+                    <path d="M258 430c34-105 81-124 142-44 33-62 73-77 122-44l31 88Z" fill="#6f3e2b" />
+                    <g fill="#51a33f">
+                        <circle cx="303" cy="381" r="19" /><circle cx="355" cy="399" r="22" /><circle cx="414" cy="374" r="20" /><circle cx="474" cy="400" r="22" />
+                    </g>
+                </svg>
             </div>
         </div>
     </div>
 </section>
 
-<section class="py-5 bg-white border-top">
+<section class="home-content">
     <div class="container">
-        <div class="row g-4 text-center">
-            <div class="col-md-4">
-                <h2 class="h5 fw-bold">Community Discussions</h2>
-                <p class="text-muted mb-0">
-                    Exchange knowledge through focused agricultural discussions.
-                </p>
-            </div>
+        <div class="category-row" aria-label="Popular discussion categories">
+            @if (Model.Categories.Any())
+            {
+                var categoryIndex = 0;
+                @foreach (var category in Model.Categories)
+                {
+                    var categoryClass = $"category-pill category-{categoryIndex % 4}";
+                    <a class="@categoryClass" asp-controller="Forum" asp-action="Index" asp-route-tag="@category.Slug">
+                        <span class="category-icon">@(categoryIndex == 0 ? "↗" : categoryIndex == 1 ? "●" : categoryIndex == 2 ? "◆" : "✦")</span>
+                        <span>@category.Name</span>
+                        <small>@category.DiscussionCount</small>
+                    </a>
+                    categoryIndex++;
+                }
+            }
+            else
+            {
+                <a class="category-pill category-0" asp-controller="Forum" asp-action="Index"><span class="category-icon">↗</span><span>Crop health</span></a>
+                <a class="category-pill category-1" asp-controller="Forum" asp-action="Index"><span class="category-icon">●</span><span>Soil</span></a>
+                <a class="category-pill category-2" asp-controller="Forum" asp-action="Index"><span class="category-icon">◆</span><span>Equipment</span></a>
+                <a class="category-pill category-3" asp-controller="Forum" asp-action="Index"><span class="category-icon">✦</span><span>Livestock</span></a>
+            }
+            <a class="category-all" asp-controller="Forum" asp-action="Index">View all categories <span>→</span></a>
+        </div>
 
-            <div class="col-md-4">
-                <h2 class="h5 fw-bold">Verified Expertise</h2>
-                <p class="text-muted mb-0">
-                    Distinguish expert contributions from general community participation.
-                </p>
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">From the field</span>
+                <h2>Recent discussions</h2>
             </div>
+            <a asp-controller="Forum" asp-action="Index">View all discussions <span>→</span></a>
+        </div>
 
-            <div class="col-md-4">
-                <h2 class="h5 fw-bold">Content Moderation</h2>
-                <p class="text-muted mb-0">
-                    Support constructive discussions through reporting and moderation.
-                </p>
+        @if (Model.RecentDiscussions.Any())
+        {
+            <div class="home-discussion-grid">
+                @foreach (var discussion in Model.RecentDiscussions)
+                {
+                    <article class="home-discussion-card">
+                        <div class="discussion-card-top">
+                            <span class="avatar-seed">@discussion.AuthorName[..1].ToUpperInvariant()</span>
+                            @if (!string.IsNullOrWhiteSpace(discussion.TagName))
+                            {
+                                <a class="discussion-tag" asp-controller="Forum" asp-action="Index" asp-route-tag="@discussion.TagSlug">@discussion.TagName</a>
+                            }
+                        </div>
+                        <h3><a asp-controller="Forum" asp-action="Details" asp-route-id="@discussion.Id">@discussion.Title</a></h3>
+                        <p>@discussion.Preview</p>
+                        <div class="discussion-card-meta">
+                            <span>@discussion.AuthorName · @discussion.CreatedAt.ToLocalTime().ToString("dd MMM")</span>
+                            <span>@discussion.ReplyCount @(discussion.ReplyCount == 1 ? "reply" : "replies")</span>
+                        </div>
+                    </article>
+                }
             </div>
+        }
+        else
+        {
+            <div class="home-empty-state">
+                <span class="empty-sprout">⌁</span>
+                <div>
+                    <h3>Plant the first discussion</h3>
+                    <p>The community is ready for its first practical question or field insight.</p>
+                </div>
+                <a class="btn btn-agro" asp-controller="Forum" asp-action="Create">Start a discussion</a>
+            </div>
+        }
+
+        <div class="community-stats">
+            <div><span class="stat-symbol">●●●</span><strong>@Model.MemberCount.ToString("N0")</strong><small>Members</small></div>
+            <div><span class="stat-symbol">◖</span><strong>@Model.DiscussionCount.ToString("N0")</strong><small>Discussions</small></div>
+            <div><span class="stat-symbol">◆</span><strong>@Model.ReplyCount.ToString("N0")</strong><small>Replies</small></div>
+            <div><span class="stat-symbol">↗</span><strong>Growing</strong><small>Together</small></div>
         </div>
     </div>
 </section>

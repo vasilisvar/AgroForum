@@ -1,53 +1,55 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#238636" />
     <title>@ViewData["Title"] - AgroForum</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AgroForum.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom shadow-sm">
+<body class="@ViewData["BodyClass"]">
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
             <div class="container">
-                <a class="navbar-brand fw-bold text-success" asp-area="" asp-controller="Home" asp-action="Index">
-                    AgroForum
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="AgroForum home">
+                    <svg class="brand-mark" aria-hidden="true" viewBox="0 0 48 48">
+                        <circle cx="24" cy="24" r="22" fill="#eaf6ec" />
+                        <path d="M24 37c-1-13 4-22 15-27-1 13-6 22-15 27Z" fill="#238636" />
+                        <path d="M23 37C20 25 15 18 7 15c1 12 6 19 16 22Z" fill="#67ad45" />
+                        <path d="M24 37c0-9 0-16 1-23" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                        <circle cx="17" cy="8" r="4" fill="#e9b949" />
+                    </svg>
+                    <span>AgroForum</span>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNavigation" aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav me-auto">
+                <div id="primaryNavigation" class="navbar-collapse collapse">
+                    <ul class="navbar-nav site-nav mx-lg-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link @(currentController == "Home" ? "active" : null)" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Forum" asp-action="Index">Forum</a>
+                            <a class="nav-link @(currentController == "Forum" ? "active" : null)" asp-area="" asp-controller="Forum" asp-action="Index">Forum</a>
                         </li>
-
                         @if (User.IsInRole(UserRoles.Admin) || User.IsInRole(UserRoles.Moderator))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Moderation"
-                                   asp-action="Index">Moderation</a>
+                                <a class="nav-link @(currentController == "Moderation" ? "active" : null)" asp-area="" asp-controller="Moderation" asp-action="Index">Moderation</a>
                             </li>
                         }
-
                         @if (User.IsInRole(UserRoles.Admin))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Admin"
-                                   asp-action="Index">Admin</a>
+                                <a class="nav-link @(currentController == "Admin" ? "active" : null)" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
                             </li>
                         }
                     </ul>
@@ -62,9 +64,38 @@
         @RenderBody()
     </main>
 
-    <footer class="border-top footer text-muted py-3 mt-5">
+    <footer class="site-footer">
         <div class="container">
-            &copy; 2026 - AgroForum
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                        <svg class="brand-mark" aria-hidden="true" viewBox="0 0 48 48">
+                            <circle cx="24" cy="24" r="22" fill="#d8ecd9" />
+                            <path d="M24 37c-1-13 4-22 15-27-1 13-6 22-15 27Z" fill="#238636" />
+                            <path d="M23 37C20 25 15 18 7 15c1 12 6 19 16 22Z" fill="#67ad45" />
+                            <circle cx="17" cy="8" r="4" fill="#e9b949" />
+                        </svg>
+                        <span>AgroForum</span>
+                    </a>
+                    <p>Grow knowledge. Cultivate community.</p>
+                </div>
+                <div>
+                    <h2>Community</h2>
+                    <a asp-controller="Forum" asp-action="Index">Forum</a>
+                    <a asp-controller="Forum" asp-action="Create">Ask a question</a>
+                </div>
+                <div>
+                    <h2>Account</h2>
+                    <a asp-area="Identity" asp-page="/Account/Login">Sign in</a>
+                    <a asp-area="Identity" asp-page="/Account/Register">Join AgroForum</a>
+                </div>
+                <div>
+                    <h2>About</h2>
+                    <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                    <span>Built for agricultural communities.</span>
+                </div>
+            </div>
+            <div class="footer-bottom">&copy; 2026 AgroForum. Knowledge grows when it is shared.</div>
         </div>
     </footer>
 
