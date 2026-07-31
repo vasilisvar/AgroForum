@@ -2,6 +2,12 @@
 
 AgroForum is an ASP.NET Core MVC community forum for agricultural discussions.
 
+## Day 6 design refresh
+
+The Day 6 working copy introduces a brighter agricultural visual system built around leaf green, light botanical green, soft sage, and white surfaces. The responsive homepage now presents real recent discussions, popular tags, and community totals from the application database. The shared navigation, footer, forum, moderation, and administration surfaces use the same design tokens while preserving all existing role checks and endpoints.
+
+Login and registration now use custom, responsive Razor Pages with the approved Split Farm Story layout. They preserve ASP.NET Identity validation and sign-in behavior while adding optional first and last names to registration.
+
 ## v2 Admin and Moderator boards
 
 Version 2 adds two role-protected workspaces:
