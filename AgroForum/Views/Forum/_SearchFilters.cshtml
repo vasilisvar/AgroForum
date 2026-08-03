@@ -1,0 +1,68 @@
+@model ForumIndexViewModel
+
+<form method="get" class="forum-card forum-filter-card">
+    <div class="forum-filter-heading">
+        <span class="forum-filter-icon" aria-hidden="true"></span>
+        <div>
+            <p class="text-success fw-semibold mb-1">Discover</p>
+            <h2 class="h5 fw-bold mb-0">Find a discussion</h2>
+        </div>
+    </div>
+
+    <div class="forum-filter-fields">
+        <div>
+            <label class="form-label fw-semibold" for="search">Keywords</label>
+            <input id="search"
+                   name="search"
+                   value="@Model.Search"
+                   class="form-control"
+                   placeholder="Soil, irrigation, crops..." />
+            <div class="form-text">Searches titles, posts, and tags.</div>
+        </div>
+
+        <div>
+            <label class="form-label fw-semibold" for="tag">Agricultural topic</label>
+            <select id="tag" name="tag" class="form-select">
+                <option value="">All topics</option>
+                @foreach (var tag in Model.AvailableTags)
+                {
+                    var isSelected = Model.Tag == tag.Slug || Model.Tag == tag.Name;
+                    <option value="@tag.Slug" selected="@isSelected">@tag.Name</option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label fw-semibold" for="sort">Order results</label>
+            <select id="sort" name="sort" class="form-select">
+                <option value="newest" selected="@(Model.Sort == "newest")">Newest first</option>
+                <option value="likes" selected="@(Model.Sort == "likes")">Most liked</option>
+                <option value="comments" selected="@(Model.Sort == "comments")">Most discussed</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-success">Apply filters</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Search) ||
+             !string.IsNullOrWhiteSpace(Model.Tag) ||
+             Model.Sort != "newest")
+        {
+            <a class="btn btn-outline-success" asp-action="Index">Clear all</a>
+        }
+    </div>
+
+    <p class="forum-filter-help mb-0">
+        Pinned community discussions always remain at the top.
+    </p>
+
+    <div class="forum-filter-farm-note">
+        <img src="~/images/illustrations/farming.svg"
+             asp-append-version="true"
+             alt="Crop growing under the sun" />
+        <div>
+            <strong>Real questions from the field</strong>
+            <span>Grow practical knowledge together.</span>
+        </div>
+    </div>
+</form>

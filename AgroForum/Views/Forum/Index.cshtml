@@ -2,6 +2,14 @@
 
 @{
     ViewData["Title"] = "Forum";
+    var activeTagName = Model.AvailableTags
+        .FirstOrDefault(tag => tag.Slug == Model.Tag || tag.Name == Model.Tag)?.Name;
+    var sortLabel = Model.Sort switch
+    {
+        "likes" => "Most liked",
+        "comments" => "Most discussed",
+        _ => "Newest first"
+    };
 }
 
 <section class="forum-shell py-5">
@@ -11,55 +19,69 @@
             <div class="alert alert-success">@message</div>
         }
 
-        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-            <div>
-                <p class="text-success fw-semibold mb-1">AgroForum</p>
-                <h1 class="display-6 fw-bold mb-2">Community discussions</h1>
-                <p class="text-muted mb-0">Ask practical questions, share experience, and collect expert input.</p>
+        <section class="forum-welcome-banner mb-4" aria-labelledby="forum-page-title">
+            <div class="forum-welcome-copy">
+                <p class="forum-welcome-kicker mb-2">
+                    <span aria-hidden="true"></span>
+                    Farmer-led knowledge
+                </p>
+                <h1 id="forum-page-title" class="display-6 fw-bold mb-2">Community discussions</h1>
+                <p class="forum-welcome-description mb-4">
+                    Ask practical questions, share field experience, and collect reliable input from the community.
+                </p>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a class="btn btn-success" asp-action="Create">Start a discussion</a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-success" asp-area="Identity" asp-page="/Account/Login">Log in to post</a>
+                }
             </div>
 
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <a class="btn btn-success" asp-action="Create">Create post</a>
-            }
-            else
-            {
-                <a class="btn btn-outline-success" asp-area="Identity" asp-page="/Account/Login">Log in to post</a>
-            }
-        </div>
+            <div class="forum-welcome-art">
+                <img src="~/images/illustrations/farm-girl.svg"
+                     asp-append-version="true"
+                     alt="Farmer tending young crops" />
+            </div>
+        </section>
 
-        <div class="forum-card mb-4">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-7">
-                    <label class="form-label fw-semibold" for="search">Search</label>
-                    <input id="search"
-                           name="search"
-                           value="@Model.Search"
-                           class="form-control"
-                           placeholder="Search posts or tags" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold" for="tag">Tag</label>
-                    <select id="tag" name="tag" class="form-select">
-                        <option value="">All tags</option>
-                        @foreach (var tag in Model.AvailableTags)
-                        {
-                            <option value="@tag" selected="@(Model.Tag == tag)">@tag</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-dark">Filter</button>
-                </div>
-            </form>
-        </div>
+        <div class="forum-discovery-layout">
+            <aside class="forum-filter-sidebar" aria-label="Forum search and filters">
+                <partial name="_SearchFilters" model="Model" />
+            </aside>
 
-        @if (Model.Posts.Any())
-        {
-            <div class="forum-post-list">
-                @foreach (var post in Model.Posts)
+            <div class="forum-results">
+                <div class="forum-results-toolbar">
+                    <div>
+                        <p class="forum-results-count mb-1">
+                            @Model.TotalResults @(Model.TotalResults == 1 ? "discussion" : "discussions") found
+                        </p>
+                        <h2 class="h4 fw-bold mb-0">
+                            @if (!string.IsNullOrWhiteSpace(Model.Search))
+                            {
+                                <span>Results for &ldquo;@Model.Search&rdquo;</span>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(activeTagName))
+                            {
+                                <span>@activeTagName discussions</span>
+                            }
+                            else
+                            {
+                                <span>All community discussions</span>
+                            }
+                        </h2>
+                    </div>
+                    <span class="forum-sort-badge">@sortLabel</span>
+                </div>
+
+                @if (Model.Posts.Any())
                 {
-                    <article class="forum-card forum-post-card">
+                    <div class="forum-post-list">
+                        @foreach (var post in Model.Posts)
+                        {
+                            <article class="forum-card forum-post-card">
                         <div class="d-flex flex-wrap justify-content-between gap-3">
                             <div>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
@@ -67,7 +89,9 @@
                                     {
                                         <a class="forum-tag text-decoration-none"
                                            asp-action="Index"
-                                           asp-route-tag="@tag">@tag</a>
+                                           asp-route-search="@Model.Search"
+                                           asp-route-tag="@tag"
+                                           asp-route-sort="@Model.Sort">@tag</a>
                                     }
                                 </div>
 
@@ -118,22 +142,94 @@
                                    asp-route-id="@post.Id"
                                    asp-fragment="add-comment">Be the first to comment</a>
                             }
-                            <span>@post.FavoriteCount favorites</span>
+                            <span class="forum-metric"><strong>@post.LikeCount</strong> likes</span>
+                            <span class="forum-metric"><strong>@post.FavoriteCount</strong> favorites</span>
                             @if (post.IsAnonymous)
                             {
                                 <span>Anonymous post</span>
                             }
                         </div>
-                    </article>
+                            </article>
+                        }
+                    </div>
+
+                    @if (Model.TotalPages > 1)
+                    {
+                        var startPage = Math.Max(1, Model.CurrentPage - 2);
+                        var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+
+                        <nav class="forum-pagination" aria-label="Forum result pages">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : null)">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-tag="@Model.Tag"
+                                       asp-route-sort="@Model.Sort"
+                                       asp-route-page="@(Model.CurrentPage - 1)"
+                                       aria-label="Previous page">Previous</a>
+                                </li>
+
+                                @if (startPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-tag="@Model.Tag" asp-route-sort="@Model.Sort" asp-route-page="1">1</a>
+                                    </li>
+                                    @if (startPage > 2)
+                                    {
+                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                    }
+                                }
+
+                                @for (var pageNumber = startPage; pageNumber <= endPage; pageNumber++)
+                                {
+                                    <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : null)">
+                                        <a class="page-link"
+                                           asp-action="Index"
+                                           asp-route-search="@Model.Search"
+                                           asp-route-tag="@Model.Tag"
+                                           asp-route-sort="@Model.Sort"
+                                           asp-route-page="@pageNumber">@pageNumber</a>
+                                    </li>
+                                }
+
+                                @if (endPage < Model.TotalPages)
+                                {
+                                    @if (endPage < Model.TotalPages - 1)
+                                    {
+                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                    }
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-tag="@Model.Tag" asp-route-sort="@Model.Sort" asp-route-page="@Model.TotalPages">@Model.TotalPages</a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(!Model.HasNextPage ? "disabled" : null)">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-tag="@Model.Tag"
+                                       asp-route-sort="@Model.Sort"
+                                       asp-route-page="@(Model.CurrentPage + 1)"
+                                       aria-label="Next page">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                }
+                else
+                {
+                    <div class="forum-card forum-empty-state text-center py-5">
+                        <img class="forum-empty-illustration"
+                             src="~/images/illustrations/farming.svg"
+                             asp-append-version="true"
+                             alt="Crop growing under the sun" />
+                        <h2 class="h4 fw-bold">No discussions found</h2>
+                        <p class="text-muted mb-3">Try broader keywords or clear one of the current filters.</p>
+                        <a class="btn btn-outline-success" asp-action="Index">Reset discovery</a>
+                    </div>
                 }
             </div>
-        }
-        else
-        {
-            <div class="forum-card text-center py-5">
-                <h2 class="h4 fw-bold">No discussions found</h2>
-                <p class="text-muted mb-0">Start the first discussion or adjust the current filter.</p>
-            </div>
-        }
+        </div>
     </div>
 </section>
