@@ -6,8 +6,20 @@ namespace AgroForum.ViewModels.Forum
 
         public string? Tag { get; set; }
 
+        public string Sort { get; set; } = "newest";
+
+        public int CurrentPage { get; set; } = 1;
+
+        public int TotalPages { get; set; }
+
+        public int TotalResults { get; set; }
+
+        public bool HasPreviousPage => CurrentPage > 1;
+
+        public bool HasNextPage => CurrentPage < TotalPages;
+
         public IReadOnlyList<ForumPostSummaryViewModel> Posts { get; set; } = new List<ForumPostSummaryViewModel>();
 
-        public IReadOnlyList<string> AvailableTags { get; set; } = new List<string>();
+        public IReadOnlyList<ForumTagViewModel> AvailableTags { get; set; } = new List<ForumTagViewModel>();
     }
 }

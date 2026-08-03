@@ -22,6 +22,8 @@ namespace AgroForum.ViewModels.Forum
 
         public int CommentCount { get; set; }
 
+        public int LikeCount { get; set; }
+
         public int FavoriteCount { get; set; }
 
         public IReadOnlyList<string> Tags { get; set; } = new List<string>();

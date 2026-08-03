@@ -14,6 +14,8 @@ namespace AgroForum.Controllers
 {
     public class ForumController : Controller
     {
+        private const int ForumPageSize = 6;
+
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -24,36 +26,71 @@ namespace AgroForum.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Index(string? search, string? tag)
+        public async Task<IActionResult> Index(string? search, string? tag, string? sort, int page = 1)
         {
+            var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+            var normalizedTag = string.IsNullOrWhiteSpace(tag) ? null : tag.Trim();
+            var selectedSort = sort?.Trim().ToLowerInvariant() switch
+            {
+                "likes" => "likes",
+                "comments" => "comments",
+                _ => "newest"
+            };
+
             var postsQuery = _context.ForumPosts
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(post => post.Author)
                 .Include(post => post.PostTags)
                     .ThenInclude(postTag => postTag.ForumTag)
                 .Include(post => post.Comments)
+                .Include(post => post.Likes)
                 .Include(post => post.Favorites)
                 .Where(post => !post.IsDeleted);
 
-            if (!string.IsNullOrWhiteSpace(search))
+            if (normalizedSearch != null)
             {
-                var term = search.Trim();
                 postsQuery = postsQuery.Where(post =>
-                    post.Title.Contains(term) ||
-                    post.Content.Contains(term) ||
-                    post.PostTags.Any(postTag => postTag.ForumTag.Name.Contains(term)));
+                    post.Title.Contains(normalizedSearch) ||
+                    post.Content.Contains(normalizedSearch) ||
+                    post.PostTags.Any(postTag => postTag.ForumTag.Name.Contains(normalizedSearch)));
             }
 
-            if (!string.IsNullOrWhiteSpace(tag))
+            if (normalizedTag != null)
             {
-                var selectedTag = tag.Trim();
                 postsQuery = postsQuery.Where(post =>
-                    post.PostTags.Any(postTag => postTag.ForumTag.Slug == selectedTag || postTag.ForumTag.Name == selectedTag));
+                    post.PostTags.Any(postTag =>
+                        postTag.ForumTag.Slug == normalizedTag ||
+                        postTag.ForumTag.Name == normalizedTag));
             }
 
-            var posts = await postsQuery
-                .OrderByDescending(post => post.IsPinned)
-                .ThenByDescending(post => post.CreatedAt)
+            var totalResults = await postsQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalResults / (double)ForumPageSize);
+            var currentPage = totalPages == 0
+                ? 1
+                : Math.Min(Math.Max(page, 1), totalPages);
+
+            var orderedPosts = selectedSort switch
+            {
+                "likes" => postsQuery
+                    .OrderByDescending(post => post.IsPinned)
+                    .ThenByDescending(post => post.Likes.Count)
+                    .ThenByDescending(post => post.CreatedAt)
+                    .ThenByDescending(post => post.Id),
+                "comments" => postsQuery
+                    .OrderByDescending(post => post.IsPinned)
+                    .ThenByDescending(post => post.Comments.Count(comment => !comment.IsDeleted))
+                    .ThenByDescending(post => post.CreatedAt)
+                    .ThenByDescending(post => post.Id),
+                _ => postsQuery
+                    .OrderByDescending(post => post.IsPinned)
+                    .ThenByDescending(post => post.CreatedAt)
+                    .ThenByDescending(post => post.Id)
+            };
+
+            var posts = await orderedPosts
+                .Skip((currentPage - 1) * ForumPageSize)
+                .Take(ForumPageSize)
                 .ToListAsync();
 
             var moderatorIds = await GetModeratorIdsAsync(posts.Select(post => post.AuthorId));
@@ -61,13 +98,22 @@ namespace AgroForum.Controllers
             var availableTags = await _context.ForumTags
                 .AsNoTracking()
                 .OrderBy(tagItem => tagItem.Name)
-                .Select(tagItem => tagItem.Name)
+                .Select(tagItem => new ForumTagViewModel
+                {
+                    Id = tagItem.Id,
+                    Name = tagItem.Name,
+                    Slug = tagItem.Slug
+                })
                 .ToListAsync();
 
             var model = new ForumIndexViewModel
             {
-                Search = search,
-                Tag = tag,
+                Search = normalizedSearch,
+                Tag = normalizedTag,
+                Sort = selectedSort,
+                CurrentPage = currentPage,
+                TotalPages = totalPages,
+                TotalResults = totalResults,
                 AvailableTags = availableTags,
                 Posts = posts.Select(post => new ForumPostSummaryViewModel
                 {
@@ -81,6 +127,7 @@ namespace AgroForum.Controllers
                     IsPinned = post.IsPinned,
                     CreatedAt = post.CreatedAt,
                     CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
+                    LikeCount = post.Likes.Count,
                     FavoriteCount = post.Favorites.Count,
                     Tags = post.PostTags
                         .Select(postTag => postTag.ForumTag.Name)
