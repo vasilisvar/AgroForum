@@ -20,11 +20,17 @@ namespace AgroForum.ViewModels.Forum
 
         public DateTime CreatedAt { get; set; }
 
+        public DateTime? SavedAt { get; set; }
+
         public int CommentCount { get; set; }
 
         public int LikeCount { get; set; }
 
         public int FavoriteCount { get; set; }
+
+        public bool IsLikedByCurrentUser { get; set; }
+
+        public bool IsFavoritedByCurrentUser { get; set; }
 
         public IReadOnlyList<string> Tags { get; set; } = new List<string>();
     }

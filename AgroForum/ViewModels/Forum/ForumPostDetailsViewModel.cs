@@ -22,6 +22,14 @@ namespace AgroForum.ViewModels.Forum
 
         public DateTime? UpdatedAt { get; set; }
 
+        public int LikeCount { get; set; }
+
+        public int FavoriteCount { get; set; }
+
+        public bool IsLikedByCurrentUser { get; set; }
+
+        public bool IsFavoritedByCurrentUser { get; set; }
+
         public IReadOnlyList<ForumTagViewModel> Tags { get; set; } = new List<ForumTagViewModel>();
 
         public IReadOnlyList<ForumCommentViewModel> Comments { get; set; } = new List<ForumCommentViewModel>();

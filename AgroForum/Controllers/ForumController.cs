@@ -28,6 +28,7 @@ namespace AgroForum.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Index(string? search, string? tag, string? sort, int page = 1)
         {
+            var currentUserId = _userManager.GetUserId(User);
             var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
             var normalizedTag = string.IsNullOrWhiteSpace(tag) ? null : tag.Trim();
             var selectedSort = sort?.Trim().ToLowerInvariant() switch
@@ -129,6 +130,8 @@ namespace AgroForum.Controllers
                     CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
                     LikeCount = post.Likes.Count,
                     FavoriteCount = post.Favorites.Count,
+                    IsLikedByCurrentUser = currentUserId != null && post.Likes.Any(like => like.UserId == currentUserId),
+                    IsFavoritedByCurrentUser = currentUserId != null && post.Favorites.Any(favorite => favorite.UserId == currentUserId),
                     Tags = post.PostTags
                         .Select(postTag => postTag.ForumTag.Name)
                         .OrderBy(name => name)
@@ -139,16 +142,83 @@ namespace AgroForum.Controllers
             return View(model);
         }
 
+        [Authorize]
+        public async Task<IActionResult> Saved()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var favorites = await _context.ForumPostFavorites
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Where(favorite => favorite.UserId == userId && !favorite.ForumPost.IsDeleted)
+                .OrderByDescending(favorite => favorite.CreatedAt)
+                .Include(favorite => favorite.ForumPost)
+                    .ThenInclude(post => post.Author)
+                .Include(favorite => favorite.ForumPost)
+                    .ThenInclude(post => post.PostTags)
+                        .ThenInclude(postTag => postTag.ForumTag)
+                .Include(favorite => favorite.ForumPost)
+                    .ThenInclude(post => post.Comments)
+                .Include(favorite => favorite.ForumPost)
+                    .ThenInclude(post => post.Likes)
+                .Include(favorite => favorite.ForumPost)
+                    .ThenInclude(post => post.Favorites)
+                .ToListAsync();
+
+            var moderatorIds = await GetModeratorIdsAsync(
+                favorites.Select(favorite => favorite.ForumPost.AuthorId));
+
+            var model = new SavedDiscussionsViewModel
+            {
+                Posts = favorites.Select(favorite =>
+                {
+                    var post = favorite.ForumPost;
+                    return new ForumPostSummaryViewModel
+                    {
+                        Id = post.Id,
+                        Title = post.Title,
+                        Preview = BuildPreview(post.Content),
+                        AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                        IsAnonymous = post.IsAnonymous,
+                        IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
+                        IsLocked = post.IsLocked,
+                        IsPinned = post.IsPinned,
+                        CreatedAt = post.CreatedAt,
+                        SavedAt = favorite.CreatedAt,
+                        CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
+                        LikeCount = post.Likes.Count,
+                        FavoriteCount = post.Favorites.Count,
+                        IsLikedByCurrentUser = post.Likes.Any(like => like.UserId == userId),
+                        IsFavoritedByCurrentUser = true,
+                        Tags = post.PostTags
+                            .Select(postTag => postTag.ForumTag.Name)
+                            .OrderBy(name => name)
+                            .ToList()
+                    };
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
         [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
+            var currentUserId = _userManager.GetUserId(User);
             var post = await _context.ForumPosts
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(item => item.Author)
                 .Include(item => item.PostTags)
                     .ThenInclude(postTag => postTag.ForumTag)
                 .Include(item => item.Comments)
                     .ThenInclude(comment => comment.Author)
+                .Include(item => item.Likes)
+                .Include(item => item.Favorites)
                 .FirstOrDefaultAsync(item => item.Id == id && !item.IsDeleted);
 
             if (post == null)
@@ -171,6 +241,10 @@ namespace AgroForum.Controllers
                 IsPinned = post.IsPinned,
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
+                LikeCount = post.Likes.Count,
+                FavoriteCount = post.Favorites.Count,
+                IsLikedByCurrentUser = currentUserId != null && post.Likes.Any(like => like.UserId == currentUserId),
+                IsFavoritedByCurrentUser = currentUserId != null && post.Favorites.Any(favorite => favorite.UserId == currentUserId),
                 Tags = post.PostTags
                     .Select(postTag => new ForumTagViewModel
                     {
@@ -199,6 +273,80 @@ namespace AgroForum.Controllers
             };
 
             return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleLike(int postId, string? returnUrl)
+        {
+            if (!await _context.ForumPosts.AnyAsync(post => post.Id == postId && !post.IsDeleted))
+            {
+                return NotFound();
+            }
+
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var existingLike = await _context.ForumPostLikes.FindAsync(postId, userId);
+            if (existingLike == null)
+            {
+                _context.ForumPostLikes.Add(new ForumPostLike
+                {
+                    ForumPostId = postId,
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                });
+                TempData["ForumMessage"] = "Discussion liked.";
+            }
+            else
+            {
+                _context.ForumPostLikes.Remove(existingLike);
+                TempData["ForumMessage"] = "Like removed.";
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToForumLocation(postId, returnUrl);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleFavorite(int postId, string? returnUrl)
+        {
+            if (!await _context.ForumPosts.AnyAsync(post => post.Id == postId && !post.IsDeleted))
+            {
+                return NotFound();
+            }
+
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var existingFavorite = await _context.ForumPostFavorites.FindAsync(postId, userId);
+            if (existingFavorite == null)
+            {
+                _context.ForumPostFavorites.Add(new ForumPostFavorite
+                {
+                    ForumPostId = postId,
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                });
+                TempData["ForumMessage"] = "Discussion saved.";
+            }
+            else
+            {
+                _context.ForumPostFavorites.Remove(existingFavorite);
+                TempData["ForumMessage"] = "Discussion removed from saved items.";
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToForumLocation(postId, returnUrl);
         }
 
         [Authorize]
@@ -472,6 +620,16 @@ namespace AgroForum.Controllers
         {
             var preview = Regex.Replace(content, "\\s+", " ").Trim();
             return preview.Length <= 180 ? preview : $"{preview[..180]}...";
+        }
+
+        private IActionResult RedirectToForumLocation(int postId, string? returnUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Details), new { id = postId });
         }
     }
 }

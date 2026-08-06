@@ -50,6 +50,14 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Accurate result totals and clear zero-result feedback.
 - Pinned discussions remain prioritized in every sorting mode.
 
+### Community engagement
+
+- Authenticated members can like or unlike discussions from the forum feed and full discussion pages.
+- Members can save or remove discussions with clear active states and updated community counts.
+- A private Saved discussions page collects each member's useful posts in save-date order.
+- Signed-out visitors receive clear participation prompts and return to the same discussion after signing in.
+- Engagement actions use anti-forgery protection, validate active posts, and keep redirects inside AgroForum.
+
 ### Moderation and administration
 
 - Separate role-protected Moderator and Admin workspaces.
@@ -77,8 +85,8 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 | Foundation | MVC structure, Identity, database, posts, comments, tags, and reports | Complete |
 | Version 2 | Admin and Moderator boards, ticket workflow, reversible controls, and audit history | Complete |
 | Design refresh | Agricultural visual system, live homepage, and redesigned authentication | Complete |
-| Version 3 | Search, topic filters, sorting, pagination, result metrics, and stronger farming identity | Current milestone |
-| Community engagement | Interactive likes and favorites, saved discussions, and clearer participation feedback | Planned |
+| Version 3 | Search, topic filters, sorting, pagination, result metrics, and stronger farming identity | Complete |
+| Community engagement | Interactive likes and favorites, saved discussions, and clearer participation feedback | Current milestone |
 | Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Planned |
 | Knowledge quality | Accepted solutions, richer agricultural resources, attachments, and improved topic organization | Planned |
 | Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Target outcome |
@@ -261,8 +269,8 @@ AgroForum/
 
 ## Version history
 
-Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, while current forum-discovery work is developed through a dedicated Version 3 feature branch before review and merge.
+Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and community engagement is developed through its own feature branch before review and merge.
 
 ## Project status
 
-AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, and forum-discovery experience. The remaining roadmap focuses on deeper community engagement, knowledge quality, testing, deployment readiness, and formal evaluation.
+AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, and the current community-engagement experience. The remaining roadmap focuses on community identity, knowledge quality, testing, deployment readiness, and formal evaluation.

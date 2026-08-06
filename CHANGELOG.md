@@ -1,5 +1,14 @@
 # Changelog
 
+## Community engagement - In progress
+
+- Activated the existing post-like and post-favorite relationships without requiring a new database migration.
+- Added authenticated like/unlike and save/remove actions with anti-forgery protection and safe local redirects.
+- Added per-user engagement states and updated community counts to forum cards and full discussion pages.
+- Added a private Saved discussions page with save-date ordering, removal controls, and an agricultural empty state.
+- Added signed-in Saved navigation and sign-in prompts that preserve the visitor's original destination.
+- Added responsive, keyboard-visible active states consistent with the AgroForum visual system.
+
 ## Day 6 - In progress
 
 ### Agricultural visual system and homepage
