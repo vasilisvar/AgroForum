@@ -1,5 +1,6 @@
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -38,8 +39,17 @@
                             <a class="nav-link @(currentController == "Home" ? "active" : null)" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @(currentController == "Forum" ? "active" : null)" asp-area="" asp-controller="Forum" asp-action="Index">Forum</a>
+                            <a class="nav-link @(currentController == "Forum" && currentAction != "Saved" ? "active" : null)" asp-area="" asp-controller="Forum" asp-action="Index">Forum</a>
                         </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Forum" && currentAction == "Saved" ? "active" : null)"
+                                   asp-area=""
+                                   asp-controller="Forum"
+                                   asp-action="Saved">Saved</a>
+                            </li>
+                        }
                         @if (User.IsInRole(UserRoles.Admin) || User.IsInRole(UserRoles.Moderator))
                         {
                             <li class="nav-item">

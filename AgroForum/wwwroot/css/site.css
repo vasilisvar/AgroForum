@@ -926,6 +926,132 @@ a:focus-visible {
     padding: 0.25rem 0.6rem;
 }
 
+.engagement-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.engagement-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, #ffffff, var(--agro-050));
+}
+
+.engagement-button {
+    display: inline-flex;
+    min-height: 2.15rem;
+    align-items: center;
+    gap: 0.38rem;
+    justify-content: center;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--agro-300);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--agro-700);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 750;
+    line-height: 1;
+    text-decoration: none;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.engagement-button:hover {
+    border-color: var(--agro-600);
+    background: var(--agro-100);
+    color: var(--agro-900);
+    transform: translateY(-1px);
+}
+
+.engagement-button:focus-visible {
+    outline: 3px solid rgba(35, 134, 54, 0.24);
+    outline-offset: 2px;
+}
+
+.engagement-button.is-active {
+    border-color: var(--agro-600);
+    background: var(--agro-600);
+    color: #fff;
+}
+
+.engagement-button.is-active:hover {
+    border-color: var(--agro-800);
+    background: var(--agro-800);
+    color: #fff;
+}
+
+.engagement-button strong {
+    min-width: 1.2rem;
+    padding: 0.18rem 0.32rem;
+    border-radius: 999px;
+    background: var(--agro-100);
+    color: var(--agro-800);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.engagement-button.is-active strong {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.engagement-button-lg {
+    min-height: 2.65rem;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.9rem;
+}
+
+.saved-discussions-shell {
+    max-width: 980px;
+}
+
+.saved-discussions-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.75rem;
+    border: 1px solid rgba(35, 134, 54, 0.18);
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #fff 15%, var(--agro-100));
+    box-shadow: var(--shadow-sm);
+}
+
+.saved-discussions-header h1 {
+    color: var(--agro-900);
+}
+
+.section-kicker {
+    color: var(--agro-700);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.saved-discussion-card {
+    border-left: 4px solid var(--sun);
+}
+
+.saved-date {
+    align-self: flex-start;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: #fff6d8;
+    color: #75550f;
+    font-size: 0.78rem;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.saved-empty-state {
+    background: linear-gradient(180deg, #fff, var(--agro-050));
+}
+
 .forum-pagination {
     margin-top: 1.5rem;
 }
@@ -1687,6 +1813,11 @@ a:focus-visible {
         flex-direction: column;
     }
 
+    .saved-discussions-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .community-stats {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1756,6 +1887,16 @@ a:focus-visible {
 
 @media (max-width: 575.98px) {
     .forum-welcome-copy .btn {
+        width: 100%;
+    }
+
+    .engagement-bar,
+    .engagement-bar .engagement-form,
+    .engagement-bar .engagement-button {
+        width: 100%;
+    }
+
+    .saved-discussions-header .btn {
         width: 100%;
     }
 

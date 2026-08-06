@@ -1,0 +1,119 @@
+@model SavedDiscussionsViewModel
+
+@{
+    ViewData["Title"] = "Saved discussions";
+    var currentReturnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+}
+
+<section class="forum-shell py-5">
+    <div class="container saved-discussions-shell">
+        @if (TempData["ForumMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        <div class="saved-discussions-header mb-4">
+            <div>
+                <p class="section-kicker mb-2">Your field notebook</p>
+                <h1 class="display-6 fw-bold mb-2">Saved discussions</h1>
+                <p class="text-muted mb-0">Keep useful farming knowledge close and return to it when you need it.</p>
+            </div>
+            <a class="btn btn-outline-success" asp-action="Index">Discover discussions</a>
+        </div>
+
+        @if (Model.Posts.Any())
+        {
+            <p class="forum-results-count mb-3">
+                @Model.Posts.Count saved @(Model.Posts.Count == 1 ? "discussion" : "discussions")
+            </p>
+
+            <div class="forum-post-list">
+                @foreach (var post in Model.Posts)
+                {
+                    <article class="forum-card forum-post-card saved-discussion-card">
+                        <div class="d-flex flex-wrap justify-content-between gap-3">
+                            <div>
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    @foreach (var tag in post.Tags)
+                                    {
+                                        <a class="forum-tag text-decoration-none"
+                                           asp-action="Index"
+                                           asp-route-tag="@tag">@tag</a>
+                                    }
+                                </div>
+                                <h2 class="h4 fw-bold mb-2">
+                                    <a class="forum-post-title" asp-action="Details" asp-route-id="@post.Id">@post.Title</a>
+                                </h2>
+                                @if (post.IsPinned)
+                                {
+                                    <span class="badge text-bg-success me-1">Pinned</span>
+                                }
+                                @if (post.IsLocked)
+                                {
+                                    <span class="badge text-bg-secondary">Locked</span>
+                                }
+                            </div>
+                            @if (post.SavedAt.HasValue)
+                            {
+                                <span class="saved-date">Saved @post.SavedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            }
+                        </div>
+
+                        <p class="forum-meta mb-2">
+                            Posted by @post.AuthorName
+                            @if (post.IsAuthorModerator)
+                            {
+                                <span class="moderator-badge">Moderator</span>
+                            }
+                            on @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                        </p>
+                        <p class="forum-post-preview text-muted mb-3">@post.Preview</p>
+
+                        <div class="d-flex flex-wrap align-items-center gap-3 forum-meta">
+                            <a class="btn btn-success btn-sm" asp-action="Details" asp-route-id="@post.Id">Read full post</a>
+                            <a class="btn btn-outline-success btn-sm"
+                               asp-action="Details"
+                               asp-route-id="@post.Id"
+                               asp-fragment="comments">@post.CommentCount comments</a>
+
+                            <form asp-action="ToggleLike" method="post" class="engagement-form">
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                                <button type="submit"
+                                        class="engagement-button @(post.IsLikedByCurrentUser ? "is-active" : null)"
+                                        aria-pressed="@post.IsLikedByCurrentUser.ToString().ToLowerInvariant()">
+                                    <span aria-hidden="true">&#9829;</span>
+                                    <span>@(post.IsLikedByCurrentUser ? "Liked" : "Like")</span>
+                                    <strong>@post.LikeCount</strong>
+                                </button>
+                            </form>
+                            <form asp-action="ToggleFavorite" method="post" class="engagement-form">
+                                <input type="hidden" name="postId" value="@post.Id" />
+                                <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                                <button type="submit"
+                                        class="engagement-button is-active"
+                                        aria-pressed="true">
+                                    <span aria-hidden="true">&#9733;</span>
+                                    <span>Remove saved</span>
+                                    <strong>@post.FavoriteCount</strong>
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="forum-card forum-empty-state saved-empty-state text-center py-5">
+                <img class="forum-empty-illustration"
+                     src="~/images/illustrations/farming.svg"
+                     asp-append-version="true"
+                     alt="Farmers sharing knowledge in a field" />
+                <h2 class="h4 fw-bold">Your field notebook is empty</h2>
+                <p class="text-muted mb-3">Save useful discussions and they will be collected here for your next visit.</p>
+                <a class="btn btn-success" asp-action="Index">Find useful discussions</a>
+            </div>
+        }
+    </div>
+</section>
