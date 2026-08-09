@@ -172,9 +172,20 @@ namespace AgroForum.Controllers
                     .ThenInclude(post => post.Comments)
                 .Include(favorite => favorite.ForumPost)
                     .ThenInclude(post => post.Likes)
-                .Include(favorite => favorite.ForumPost)
-                    .ThenInclude(post => post.Favorites)
                 .ToListAsync();
+
+            var favoritePostIds = favorites
+                .Select(favorite => favorite.ForumPostId)
+                .ToList();
+
+            var favoriteCounts = favoritePostIds.Count == 0
+                ? new Dictionary<int, int>()
+                : await _context.ForumPostFavorites
+                    .AsNoTracking()
+                    .Where(favorite => favoritePostIds.Contains(favorite.ForumPostId))
+                    .GroupBy(favorite => favorite.ForumPostId)
+                    .Select(group => new { PostId = group.Key, Count = group.Count() })
+                    .ToDictionaryAsync(item => item.PostId, item => item.Count);
 
             var moderatorIds = await GetModeratorIdsAsync(
                 favorites.Select(favorite => favorite.ForumPost.AuthorId));
@@ -199,7 +210,7 @@ namespace AgroForum.Controllers
                         SavedAt = favorite.CreatedAt,
                         CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
                         LikeCount = post.Likes.Count,
-                        FavoriteCount = post.Favorites.Count,
+                        FavoriteCount = favoriteCounts.GetValueOrDefault(post.Id),
                         IsLikedByCurrentUser = post.Likes.Any(like => like.UserId == userId),
                         IsFavoritedByCurrentUser = true,
                         Tags = post.PostTags
