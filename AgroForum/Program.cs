@@ -1,6 +1,7 @@
 using AgroForum.Constants;
 using AgroForum.Data;
 using AgroForum.Models;
+using AgroForum.Services.PostImages;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddSingleton<PostImageStorage>();
 
 var app = builder.Build();
 

@@ -37,6 +37,7 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Account registration and secure sign-in through ASP.NET Core Identity.
 - Authenticated post creation, commenting, and content reporting.
 - Optional anonymous posting while retaining accountable ownership internally.
+- One optional JPEG, PNG, or WebP image per discussion with server-side validation and responsive presentation.
 - Topic tags for organizing agricultural conversations.
 - Pinned and locked discussion states.
 - Comment, like, and favorite activity counters.
@@ -86,9 +87,11 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 | Version 2 | Admin and Moderator boards, ticket workflow, reversible controls, and audit history | Complete |
 | Design refresh | Agricultural visual system, live homepage, and redesigned authentication | Complete |
 | Version 3 | Search, topic filters, sorting, pagination, result metrics, and stronger farming identity | Complete |
-| Community engagement | Interactive likes and favorites, saved discussions, and clearer participation feedback | Current milestone |
+| Community engagement | Interactive likes and favorites, saved discussions, and clearer participation feedback | Complete |
+| Anonymous posts and images | Accountable anonymous posting plus one validated, responsive image per discussion | Complete |
+| Abuse prevention | reCAPTCHA v3 on registration, posts, comments, and reports with server-side score validation | Next milestone |
 | Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Planned |
-| Knowledge quality | Accepted solutions, richer agricultural resources, attachments, and improved topic organization | Planned |
+| Knowledge quality | Accepted solutions, richer agricultural resources, and improved topic organization | Planned |
 | Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Target outcome |
 
 The roadmap describes the intended development direction. Planned features will be implemented and evaluated incrementally rather than presented as already available.
@@ -269,8 +272,8 @@ AgroForum/
 
 ## Version history
 
-Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and community engagement is developed through its own feature branch before review and merge.
+Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and community engagement is merged into `main`. Day 8 anonymous-post and image work is developed on its own feature branch before review and merge.
 
 ## Project status
 
-AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, and the current community-engagement experience. The remaining roadmap focuses on community identity, knowledge quality, testing, deployment readiness, and formal evaluation.
+AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, and validated discussion images. The next scheduled milestone is reCAPTCHA v3 abuse prevention, followed by community identity, knowledge quality, testing, deployment readiness, and formal evaluation.

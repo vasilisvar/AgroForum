@@ -4,6 +4,7 @@ using AgroForum.Data;
 using AgroForum.Helpers;
 using AgroForum.Models;
 using AgroForum.Models.Forum;
+using AgroForum.Services.PostImages;
 using AgroForum.ViewModels.Forum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,11 +19,16 @@ namespace AgroForum.Controllers
 
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PostImageStorage _postImageStorage;
 
-        public ForumController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ForumController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            PostImageStorage postImageStorage)
         {
             _context = context;
             _userManager = userManager;
+            _postImageStorage = postImageStorage;
         }
 
         [AllowAnonymous]
@@ -121,6 +127,7 @@ namespace AgroForum.Controllers
                     Id = post.Id,
                     Title = post.Title,
                     Preview = BuildPreview(post.Content),
+                    ImagePath = post.ImagePath,
                     AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
                     IsAnonymous = post.IsAnonymous,
                     IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
@@ -182,6 +189,7 @@ namespace AgroForum.Controllers
                         Id = post.Id,
                         Title = post.Title,
                         Preview = BuildPreview(post.Content),
+                        ImagePath = post.ImagePath,
                         AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
                         IsAnonymous = post.IsAnonymous,
                         IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
@@ -234,6 +242,7 @@ namespace AgroForum.Controllers
                 Id = post.Id,
                 Title = post.Title,
                 Content = post.Content,
+                ImagePath = post.ImagePath,
                 AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
                 IsAnonymous = post.IsAnonymous,
                 IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
@@ -358,6 +367,7 @@ namespace AgroForum.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(PostImageStorage.MaxFileSizeBytes + 1_048_576)]
         public async Task<IActionResult> Create(CreateForumPostViewModel model)
         {
             if (!ModelState.IsValid)
@@ -371,22 +381,52 @@ namespace AgroForum.Controllers
                 return Challenge();
             }
 
-            var post = new ForumPost
+            string? imagePath = null;
+
+            if (model.Image != null)
             {
-                Title = model.Title.Trim(),
-                Content = model.Content.Trim(),
-                IsAnonymous = model.IsAnonymous,
-                AuthorId = userId,
-                CreatedAt = DateTime.UtcNow
-            };
+                var imageResult = await _postImageStorage.SaveAsync(
+                    model.Image,
+                    HttpContext.RequestAborted);
 
-            await AddTagsToPostAsync(post, model.Tags);
+                if (!imageResult.IsSuccess)
+                {
+                    ModelState.AddModelError(nameof(model.Image), imageResult.ErrorMessage!);
+                    return View(model);
+                }
 
-            _context.ForumPosts.Add(post);
-            await _context.SaveChangesAsync();
+                imagePath = imageResult.ImagePath;
+            }
 
-            TempData["ForumMessage"] = "Your post has been published.";
-            return RedirectToAction(nameof(Details), new { id = post.Id });
+            try
+            {
+                var post = new ForumPost
+                {
+                    Title = model.Title.Trim(),
+                    Content = model.Content.Trim(),
+                    ImagePath = imagePath,
+                    IsAnonymous = model.IsAnonymous,
+                    AuthorId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await AddTagsToPostAsync(post, model.Tags);
+
+                _context.ForumPosts.Add(post);
+                await _context.SaveChangesAsync();
+
+                TempData["ForumMessage"] = "Your post has been published.";
+                return RedirectToAction(nameof(Details), new { id = post.Id });
+            }
+            catch
+            {
+                if (imagePath != null)
+                {
+                    await _postImageStorage.DeleteAsync(imagePath);
+                }
+
+                throw;
+            }
         }
 
         [HttpPost]

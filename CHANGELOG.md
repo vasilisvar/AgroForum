@@ -1,6 +1,16 @@
 # Changelog
 
-## Community engagement - In progress
+## Day 8 - Complete
+
+- Preserved optional anonymous posting while keeping account ownership available internally for safety and moderation.
+- Added one optional image per discussion with JPEG, PNG, and WebP support and a 5 MB limit.
+- Added server-side extension, MIME-type, and binary-signature checks so renamed non-image files are rejected.
+- Added randomized server filenames, a dedicated runtime upload directory, and cleanup when database persistence fails.
+- Added a nullable, data-preserving `ImagePath` migration for existing discussions.
+- Added responsive image presentation to the forum feed, saved discussions, and full discussion pages.
+- Verified invalid-file rejection and valid anonymous image publication in an isolated LocalDB database at desktop and mobile sizes.
+
+## Community engagement - Complete
 
 - Activated the existing post-like and post-favorite relationships without requiring a new database migration.
 - Added authenticated like/unlike and save/remove actions with anti-forgery protection and safe local redirects.
@@ -9,7 +19,7 @@
 - Added signed-in Saved navigation and sign-in prompts that preserve the visitor's original destination.
 - Added responsive, keyboard-visible active states consistent with the AgroForum visual system.
 
-## Day 6 - In progress
+## Day 6 - Complete
 
 ### Agricultural visual system and homepage
 

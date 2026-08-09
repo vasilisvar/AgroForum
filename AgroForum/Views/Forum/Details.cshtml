@@ -51,6 +51,14 @@
                 </div>
             </div>
 
+            @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+            {
+                <img class="forum-post-image forum-post-image-detail"
+                     src="@Model.ImagePath"
+                     alt="Image attached to @Model.Title"
+                     loading="eager" />
+            }
+
             <div class="forum-content mb-4">
                 @Html.Raw(Html.Encode(Model.Content).Replace("\n", "<br />"))
             </div>

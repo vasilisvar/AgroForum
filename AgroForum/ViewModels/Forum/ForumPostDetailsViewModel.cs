@@ -8,6 +8,8 @@ namespace AgroForum.ViewModels.Forum
 
         public string Content { get; set; } = string.Empty;
 
+        public string? ImagePath { get; set; }
+
         public string AuthorName { get; set; } = string.Empty;
 
         public bool IsAnonymous { get; set; }

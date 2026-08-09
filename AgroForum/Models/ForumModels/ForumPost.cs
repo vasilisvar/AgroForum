@@ -14,6 +14,9 @@ namespace AgroForum.Models.Forum
         [MaxLength(5000)]
         public string Content { get; set; } = string.Empty;
 
+        [MaxLength(260)]
+        public string? ImagePath { get; set; }
+
         public bool IsAnonymous { get; set; } = false;
 
         public bool IsDeleted { get; set; } = false;
