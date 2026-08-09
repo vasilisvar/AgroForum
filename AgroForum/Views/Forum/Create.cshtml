@@ -16,7 +16,7 @@
                     <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
                 </div>
 
-                <form asp-action="Create" method="post" class="forum-card">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" class="forum-card">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                     <div class="mb-3">
@@ -32,6 +32,15 @@
                     </div>
 
                     <div class="mb-3">
+                        <label asp-for="Image" class="form-label fw-semibold"></label>
+                        <input asp-for="Image" class="form-control" accept=".jpg,.jpeg,.png,.webp" aria-describedby="imageHelp" />
+                        <div id="imageHelp" class="form-text">
+                            Add one JPEG, PNG, or WebP image up to 5 MB. The image is optional.
+                        </div>
+                        <span asp-validation-for="Image" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
                         <label asp-for="Tags" class="form-label fw-semibold"></label>
                         <input asp-for="Tags" class="form-control" placeholder="soil, irrigation, tomatoes" />
                         <div class="form-text">Separate tags with commas. Moderators can adjust tags later.</div>
@@ -41,6 +50,9 @@
                     <div class="form-check form-switch mb-4">
                         <input asp-for="IsAnonymous" class="form-check-input" />
                         <label asp-for="IsAnonymous" class="form-check-label"></label>
+                    </div>
+                    <div class="form-text mb-4">
+                        Anonymous posts hide your name publicly while retaining account ownership for safety and moderation.
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">

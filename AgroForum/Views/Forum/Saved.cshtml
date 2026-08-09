@@ -67,6 +67,17 @@
                             }
                             on @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                         </p>
+
+                        @if (!string.IsNullOrWhiteSpace(post.ImagePath))
+                        {
+                            <a class="forum-post-image-link" asp-action="Details" asp-route-id="@post.Id" aria-label="Read @post.Title">
+                                <img class="forum-post-image forum-post-image-card"
+                                     src="@post.ImagePath"
+                                     alt="Image attached to @post.Title"
+                                     loading="lazy" />
+                            </a>
+                        }
+
                         <p class="forum-post-preview text-muted mb-3">@post.Preview</p>
 
                         <div class="d-flex flex-wrap align-items-center gap-3 forum-meta">

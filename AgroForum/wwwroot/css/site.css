@@ -1121,6 +1121,45 @@ a:focus-visible {
     color: var(--agro-600);
 }
 
+.forum-post-image-link {
+    display: block;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    background: var(--agro-050);
+}
+
+.forum-post-image-link:focus-visible {
+    outline: 3px solid rgba(35, 134, 54, 0.24);
+    outline-offset: 3px;
+}
+
+.forum-post-image {
+    display: block;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.forum-post-image-card {
+    max-height: 320px;
+    aspect-ratio: 16 / 7;
+    transition: transform 0.25s ease;
+}
+
+.forum-post-image-link:hover .forum-post-image-card {
+    transform: scale(1.015);
+}
+
+.forum-post-image-detail {
+    max-height: 640px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    aspect-ratio: 16 / 9;
+}
+
 .forum-meta {
     color: var(--muted);
     font-size: 0.9rem;

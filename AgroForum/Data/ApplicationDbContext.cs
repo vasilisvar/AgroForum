@@ -36,6 +36,9 @@ namespace AgroForum.Data
                     .IsRequired()
                     .HasMaxLength(5000);
 
+                entity.Property(p => p.ImagePath)
+                    .HasMaxLength(260);
+
                 entity.Property(p => p.DeletionReason)
                     .HasMaxLength(500);
 

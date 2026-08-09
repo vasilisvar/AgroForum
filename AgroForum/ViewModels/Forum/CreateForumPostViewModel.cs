@@ -13,6 +13,10 @@ namespace AgroForum.ViewModels.Forum
         [Display(Name = "Post content")]
         public string Content { get; set; } = string.Empty;
 
+        [DataType(DataType.Upload)]
+        [Display(Name = "Discussion image (optional)")]
+        public IFormFile? Image { get; set; }
+
         [StringLength(300)]
         [Display(Name = "Tags")]
         public string? Tags { get; set; }
