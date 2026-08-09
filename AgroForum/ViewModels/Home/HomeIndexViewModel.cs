@@ -32,6 +32,8 @@ public class HomeDiscussionViewModel
 
     public string AuthorName { get; set; } = string.Empty;
 
+    public string? AuthorId { get; set; }
+
     public string? TagName { get; set; }
 
     public string? TagSlug { get; set; }

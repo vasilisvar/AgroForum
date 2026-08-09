@@ -2,6 +2,7 @@ using AgroForum.Constants;
 using AgroForum.Data;
 using AgroForum.Models;
 using AgroForum.Options;
+using AgroForum.Services.Community;
 using AgroForum.Services.PostImages;
 using AgroForum.Services.Recaptcha;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddSingleton<PostImageStorage>();
+builder.Services.AddSingleton<ContributionBadgeService>();
+builder.Services.AddScoped<CommunityNotificationService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddOptions<RecaptchaOptions>()
     .Bind(builder.Configuration.GetSection(RecaptchaOptions.SectionName))

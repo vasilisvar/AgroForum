@@ -4,6 +4,7 @@ using AgroForum.Data;
 using AgroForum.Helpers;
 using AgroForum.Models;
 using AgroForum.Models.Forum;
+using AgroForum.Services.Community;
 using AgroForum.Services.PostImages;
 using AgroForum.Services.Recaptcha;
 using AgroForum.ViewModels.Forum;
@@ -22,17 +23,20 @@ namespace AgroForum.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PostImageStorage _postImageStorage;
         private readonly IRecaptchaValidator _recaptchaValidator;
+        private readonly CommunityNotificationService _notificationService;
 
         public ForumController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             PostImageStorage postImageStorage,
-            IRecaptchaValidator recaptchaValidator)
+            IRecaptchaValidator recaptchaValidator,
+            CommunityNotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
             _postImageStorage = postImageStorage;
             _recaptchaValidator = recaptchaValidator;
+            _notificationService = notificationService;
         }
 
         [AllowAnonymous]
@@ -133,6 +137,7 @@ namespace AgroForum.Controllers
                     Preview = BuildPreview(post.Content),
                     ImagePath = post.ImagePath,
                     AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                    AuthorId = post.IsAnonymous ? null : post.AuthorId,
                     IsAnonymous = post.IsAnonymous,
                     IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                     IsLocked = post.IsLocked,
@@ -206,6 +211,7 @@ namespace AgroForum.Controllers
                         Preview = BuildPreview(post.Content),
                         ImagePath = post.ImagePath,
                         AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                        AuthorId = post.IsAnonymous ? null : post.AuthorId,
                         IsAnonymous = post.IsAnonymous,
                         IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                         IsLocked = post.IsLocked,
@@ -259,6 +265,7 @@ namespace AgroForum.Controllers
                 Content = post.Content,
                 ImagePath = post.ImagePath,
                 AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                AuthorId = post.IsAnonymous ? null : post.AuthorId,
                 IsAnonymous = post.IsAnonymous,
                 IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                 IsLocked = post.IsLocked,
@@ -286,6 +293,7 @@ namespace AgroForum.Controllers
                         Id = comment.Id,
                         Content = comment.Content,
                         AuthorName = GetDisplayName(comment.Author, isAnonymous: false),
+                        AuthorId = comment.AuthorId,
                         IsAuthorModerator = moderatorIds.Contains(comment.AuthorId),
                         CreatedAt = comment.CreatedAt,
                         UpdatedAt = comment.UpdatedAt,
@@ -304,7 +312,12 @@ namespace AgroForum.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleLike(int postId, string? returnUrl)
         {
-            if (!await _context.ForumPosts.AnyAsync(post => post.Id == postId && !post.IsDeleted))
+            var postAuthorId = await _context.ForumPosts
+                .Where(post => post.Id == postId && !post.IsDeleted)
+                .Select(post => post.AuthorId)
+                .FirstOrDefaultAsync();
+
+            if (postAuthorId == null)
             {
                 return NotFound();
             }
@@ -324,11 +337,21 @@ namespace AgroForum.Controllers
                     UserId = userId,
                     CreatedAt = DateTime.UtcNow
                 });
+                await _notificationService.QueuePostLikedAsync(
+                    postId,
+                    postAuthorId,
+                    userId,
+                    HttpContext.RequestAborted);
                 TempData["ForumMessage"] = "Discussion liked.";
             }
             else
             {
                 _context.ForumPostLikes.Remove(existingLike);
+                await _notificationService.RemovePostLikedAsync(
+                    postId,
+                    postAuthorId,
+                    userId,
+                    HttpContext.RequestAborted);
                 TempData["ForumMessage"] = "Like removed.";
             }
 
@@ -509,6 +532,7 @@ namespace AgroForum.Controllers
             };
 
             _context.ForumComments.Add(comment);
+            _notificationService.QueuePostCommented(post, comment, userId);
             await _context.SaveChangesAsync();
 
             TempData["ForumMessage"] = "Your comment has been added.";
@@ -702,8 +726,7 @@ namespace AgroForum.Controllers
                 return "Community member";
             }
 
-            var fullName = $"{user.FirstName} {user.LastName}".Trim();
-            return string.IsNullOrWhiteSpace(fullName) ? user.UserName ?? "Community member" : fullName;
+            return CommunityDisplayName.For(user);
         }
 
         private static string BuildPreview(string content)

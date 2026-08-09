@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using AgroForum.Constants;
+using AgroForum.Helpers;
 using AgroForum.Models;
 using AgroForum.Services.Recaptcha;
 using Microsoft.AspNetCore.Authentication;
@@ -98,11 +100,14 @@ public class RegisterModel : PageModel
             return Page();
         }
 
+        var firstName = NormalizeOptionalName(Input.FirstName);
+        var lastName = NormalizeOptionalName(Input.LastName);
         var user = new ApplicationUser
         {
-            FirstName = NormalizeOptionalName(Input.FirstName),
-            LastName = NormalizeOptionalName(Input.LastName)
+            FirstName = firstName,
+            LastName = lastName
         };
+        user.DisplayName = CommunityDisplayName.CreateInitial(firstName, lastName, user.Id);
 
         await _userStore.SetUserNameAsync(user, Input.Email.Trim(), CancellationToken.None);
         await _emailStore.SetEmailAsync(user, Input.Email.Trim(), CancellationToken.None);
@@ -111,6 +116,14 @@ public class RegisterModel : PageModel
         if (result.Succeeded)
         {
             _logger.LogInformation("User created a new account with password.");
+            var farmerRoleResult = await _userManager.AddToRoleAsync(user, UserRoles.Farmer);
+            if (!farmerRoleResult.Succeeded)
+            {
+                _logger.LogWarning(
+                    "New user {UserId} was created but could not be assigned the default Farmer role. Errors: {Errors}",
+                    user.Id,
+                    string.Join(", ", farmerRoleResult.Errors.Select(error => error.Code)));
+            }
 
             if (_userManager.Options.SignIn.RequireConfirmedAccount)
             {

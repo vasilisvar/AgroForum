@@ -6,6 +6,7 @@
 <ul class="navbar-nav account-nav">
 @if (SignInManager.IsSignedIn(User))
 {
+    <vc:notification-summary />
     <li class="nav-item">
         <a class="nav-link account-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage account">
             <span class="account-avatar">@((User.Identity?.Name ?? "A")[..1].ToUpperInvariant())</span>

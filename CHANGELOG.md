@@ -1,5 +1,20 @@
 # Changelog
 
+## Version 6 - Community identity - Complete
+
+- Added privacy-conscious public profiles with display names, biography, location, farming interests, roles, and join dates.
+- Replaced public email-name fallbacks with generated farmer display names and added editable profile fields to Identity account settings.
+- Added public activity history for visible discussions and comments while excluding anonymous discussion ownership.
+- Added contribution scoring, four progressive levels, and earned badges for discussions, helpful activity, likes received, and sustained participation.
+- Added persisted in-app notifications for new likes and comments on a member's discussions.
+- Added an unread notification indicator, a private notification center, mark-all-read handling, and safe POST-based notification opening.
+- Avoided notifications for private saves and prevented self-like or self-comment notifications.
+- Removed stale like notifications when a like is withdrawn and preserved anonymous authors' ability to receive engagement notifications privately.
+- Linked visible author names and avatars to profiles across the homepage, forum feed, saved discussions, discussion details, and comments.
+- Added the default Farmer role for new accounts and data-preserving profile defaults for existing accounts.
+- Added the `AddCommunityIdentity` migration with optional profile columns, a notification table, indexes, and non-destructive role backfill.
+- Added responsive profile, badge, activity, notification, and profile-editing interfaces consistent with the AgroForum design system.
+
 ## Version 5 - Abuse prevention - Complete
 
 - Added configurable reCAPTCHA v3 protection to registration, discussion creation, comments, and reports.

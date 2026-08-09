@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using AgroForum.Data;
+using AgroForum.Helpers;
 using AgroForum.Models;
 using AgroForum.ViewModels.Home;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,7 @@ namespace AgroForum.Controllers
                     Title = post.Title,
                     Preview = BuildPreview(post.Content),
                     AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                    AuthorId = post.IsAnonymous ? null : post.AuthorId,
                     CreatedAt = post.CreatedAt,
                     ReplyCount = post.Comments.Count(comment => !comment.IsDeleted),
                     TagName = post.PostTags.Select(postTag => postTag.ForumTag.Name).FirstOrDefault(),
@@ -91,8 +93,7 @@ namespace AgroForum.Controllers
                 return "Community member";
             }
 
-            var fullName = $"{user.FirstName} {user.LastName}".Trim();
-            return string.IsNullOrWhiteSpace(fullName) ? user.UserName ?? "Community member" : fullName;
+            return CommunityDisplayName.For(user);
         }
 
         private static string BuildPreview(string content)
