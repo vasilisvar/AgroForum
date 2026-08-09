@@ -1,7 +1,9 @@
 using AgroForum.Constants;
 using AgroForum.Data;
 using AgroForum.Models;
+using AgroForum.Options;
 using AgroForum.Services.PostImages;
+using AgroForum.Services.Recaptcha;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +23,22 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddSingleton<PostImageStorage>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddOptions<RecaptchaOptions>()
+    .Bind(builder.Configuration.GetSection(RecaptchaOptions.SectionName))
+    .Validate(
+        options => !options.Enabled ||
+            (!string.IsNullOrWhiteSpace(options.SiteKey) && !string.IsNullOrWhiteSpace(options.SecretKey)),
+        "Enabled reCAPTCHA requires both a site key and a secret key.")
+    .Validate(
+        options => options.MinimumScore is >= 0 and <= 1,
+        "The reCAPTCHA minimum score must be between 0 and 1.")
+    .Validate(
+        options => Uri.TryCreate(options.VerificationEndpoint, UriKind.Absolute, out var endpoint) && endpoint.Scheme == Uri.UriSchemeHttps,
+        "The reCAPTCHA verification endpoint must be an absolute HTTPS URL.")
+    .ValidateOnStart();
+builder.Services.AddHttpClient<IRecaptchaValidator, RecaptchaValidator>(client =>
+    client.Timeout = TimeSpan.FromSeconds(8));
 
 var app = builder.Build();
 

@@ -79,6 +79,14 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Agricultural illustrations integrated into the forum without overwhelming its functional layout.
 - Improved empty states, feedback messages, status badges, and mobile layouts.
 
+### Abuse prevention
+
+- Score-based reCAPTCHA v3 checks on registration, discussion creation, comments, and reports.
+- Distinct action names for each protected workflow and immediate token generation at submit time.
+- Server-side validation of the expected action, risk score, hostname, and two-minute token lifetime.
+- Configuration validation that prevents an enabled deployment from starting without both required keys.
+- Retry-safe, non-disclosing error handling when a token is missing, rejected, expired, or cannot be verified.
+
 ## Development roadmap
 
 | Milestone | Main objective | Status |
@@ -89,8 +97,8 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 | Version 3 | Search, topic filters, sorting, pagination, result metrics, and stronger farming identity | Complete |
 | Community engagement | Interactive likes and favorites, saved discussions, and clearer participation feedback | Complete |
 | Anonymous posts and images | Accountable anonymous posting plus one validated, responsive image per discussion | Complete |
-| Abuse prevention | reCAPTCHA v3 on registration, posts, comments, and reports with server-side score validation | Next milestone |
-| Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Planned |
+| Abuse prevention | reCAPTCHA v3 on registration, posts, comments, and reports with server-side score validation | Complete |
+| Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Next milestone |
 | Knowledge quality | Accepted solutions, richer agricultural resources, and improved topic organization | Planned |
 | Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Target outcome |
 
@@ -226,6 +234,38 @@ During startup, the configured existing account receives the `Admin` role. Keep 
 
 An Admin can grant or revoke the Moderator role from the Admin board. Moderators can then access `/Moderation` using their own accounts; no shared credentials are required.
 
+## Configuring reCAPTCHA v3
+
+Abuse prevention is implemented but disabled in committed configuration because reCAPTCHA keys are deployment-specific. Register a reCAPTCHA v3 site, then keep its keys outside source control.
+
+For local development, use .NET user secrets:
+
+```powershell
+dotnet user-secrets set "Recaptcha:Enabled" "true" --project AgroForum/AgroForum.csproj
+dotnet user-secrets set "Recaptcha:SiteKey" "your-site-key" --project AgroForum/AgroForum.csproj
+dotnet user-secrets set "Recaptcha:SecretKey" "your-secret-key" --project AgroForum/AgroForum.csproj
+dotnet user-secrets set "Recaptcha:AllowedHostnames:0" "localhost" --project AgroForum/AgroForum.csproj
+```
+
+For a deployed host, use equivalent environment variables:
+
+```text
+Recaptcha__Enabled=true
+Recaptcha__SiteKey=your-site-key
+Recaptcha__SecretKey=your-secret-key
+Recaptcha__AllowedHostnames__0=forum.example.com
+```
+
+The default minimum score is `0.5`. Tune `Recaptcha:MinimumScore` after reviewing real traffic in the reCAPTCHA console. When protection is enabled, AgroForum checks:
+
+- The verification request succeeded.
+- The returned action matches the protected workflow.
+- The risk score meets the configured threshold.
+- The returned hostname is explicitly allowed.
+- The response token is no more than two minutes old.
+
+A configured verification failure blocks the protected write operation and asks the visitor to retry. AgroForum does not send the optional remote IP parameter to the verification service.
+
 ## Database migrations
 
 Apply all migrations before running a fresh checkout:
@@ -267,6 +307,7 @@ AgroForum/
 - Reports require authenticated users and validated targets.
 - Removed content is soft-deleted and records who removed it and why.
 - Moderation decisions are recorded in an append-only audit trail.
+- High-risk write workflows use server-validated, action-specific reCAPTCHA v3 scores when configured.
 - Report row versions help prevent conflicting moderation decisions.
 - Bootstrap identities are configured outside source control.
 
@@ -276,4 +317,4 @@ Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version
 
 ## Project status
 
-AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, and validated discussion images. The next scheduled milestone is reCAPTCHA v3 abuse prevention, followed by community identity, knowledge quality, testing, deployment readiness, and formal evaluation.
+AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, validated discussion images, and configurable reCAPTCHA v3 abuse prevention. The next scheduled milestone is community identity, followed by knowledge quality, testing, deployment readiness, and formal evaluation.

@@ -5,6 +5,7 @@ using AgroForum.Helpers;
 using AgroForum.Models;
 using AgroForum.Models.Forum;
 using AgroForum.Services.PostImages;
+using AgroForum.Services.Recaptcha;
 using AgroForum.ViewModels.Forum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,15 +21,18 @@ namespace AgroForum.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PostImageStorage _postImageStorage;
+        private readonly IRecaptchaValidator _recaptchaValidator;
 
         public ForumController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            PostImageStorage postImageStorage)
+            PostImageStorage postImageStorage,
+            IRecaptchaValidator recaptchaValidator)
         {
             _context = context;
             _userManager = userManager;
             _postImageStorage = postImageStorage;
+            _recaptchaValidator = recaptchaValidator;
         }
 
         [AllowAnonymous]
@@ -381,6 +385,18 @@ namespace AgroForum.Controllers
         [RequestSizeLimit(PostImageStorage.MaxFileSizeBytes + 1_048_576)]
         public async Task<IActionResult> Create(CreateForumPostViewModel model)
         {
+            if (ModelState.IsValid)
+            {
+                var recaptcha = await _recaptchaValidator.ValidateAsync(
+                    model.RecaptchaToken,
+                    RecaptchaActions.CreatePost,
+                    HttpContext.RequestAborted);
+                if (!recaptcha.IsValid)
+                {
+                    ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -459,9 +475,22 @@ namespace AgroForum.Controllers
                 return RedirectToAction(nameof(Details), null, new { id = post.Id }, "add-comment");
             }
 
+            if (ModelState.IsValid)
+            {
+                var recaptcha = await _recaptchaValidator.ValidateAsync(
+                    model.RecaptchaToken,
+                    RecaptchaActions.CreateComment,
+                    HttpContext.RequestAborted);
+                if (!recaptcha.IsValid)
+                {
+                    ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
-                TempData["ForumError"] = "Please write a valid comment before submitting.";
+                TempData["ForumError"] = ModelState[string.Empty]?.Errors.FirstOrDefault()?.ErrorMessage
+                    ?? "Please write a valid comment before submitting.";
                 return RedirectToAction(nameof(Details), null, new { id = post.Id }, "add-comment");
             }
 
@@ -519,6 +548,16 @@ namespace AgroForum.Controllers
 
             if (!ModelState.IsValid)
             {
+                return View(hydratedModel);
+            }
+
+            var recaptcha = await _recaptchaValidator.ValidateAsync(
+                model.RecaptchaToken,
+                RecaptchaActions.ReportContent,
+                HttpContext.RequestAborted);
+            if (!recaptcha.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
                 return View(hydratedModel);
             }
 

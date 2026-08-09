@@ -193,7 +193,8 @@
                 }
                 else
                 {
-                    <form asp-action="AddComment" method="post">
+                    <form asp-action="AddComment" method="post" data-recaptcha-action="@RecaptchaActions.CreateComment">
+                        <input type="hidden" name="RecaptchaToken" />
                         <input type="hidden" name="ForumPostId" value="@Model.Id" />
                         <div class="mb-3">
                             <label class="form-label fw-semibold" for="Content">Comment</label>
@@ -221,3 +222,7 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <partial name="_RecaptchaScripts" model="RecaptchaActions.CreateComment" />
+}

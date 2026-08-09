@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 5 - Abuse prevention - Complete
+
+- Added configurable reCAPTCHA v3 protection to registration, discussion creation, comments, and reports.
+- Executes each challenge at submit time so short-lived tokens are sent to the server immediately.
+- Verifies token success, expected action, score threshold, hostname, and timestamp on the server.
+- Rejects missing, expired, replayed, mismatched, low-score, and malformed verification responses without exposing security details to visitors.
+- Fails closed when enabled verification is unavailable while preserving a retry-friendly user message.
+- Keeps the site key, secret key, score threshold, endpoint, and allowed hostnames in typed configuration.
+- Validates enabled configuration at startup and keeps reCAPTCHA disabled by default until deployment-specific keys are supplied.
+- Avoids transmitting the visitor's IP address because Google treats it as an optional verification parameter.
+
 ## Day 8 - Complete
 
 - Preserved optional anonymous posting while keeping account ownership available internally for safety and moderation.

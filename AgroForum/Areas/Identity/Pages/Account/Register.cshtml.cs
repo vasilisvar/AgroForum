@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using AgroForum.Models;
+using AgroForum.Services.Recaptcha;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,24 +17,30 @@ public class RegisterModel : PageModel
     private readonly IUserEmailStore<ApplicationUser> _emailStore;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ILogger<RegisterModel> _logger;
+    private readonly IRecaptchaValidator _recaptchaValidator;
 
     public RegisterModel(
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         SignInManager<ApplicationUser> signInManager,
-        ILogger<RegisterModel> logger)
+        ILogger<RegisterModel> logger,
+        IRecaptchaValidator recaptchaValidator)
     {
         _userManager = userManager;
         _userStore = userStore;
         _emailStore = GetEmailStore(userManager, userStore);
         _signInManager = signInManager;
         _logger = logger;
+        _recaptchaValidator = recaptchaValidator;
     }
 
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
     public string? ReturnUrl { get; set; }
+
+    [BindProperty]
+    public string? RecaptchaToken { get; set; }
 
     public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
 
@@ -78,6 +85,16 @@ public class RegisterModel : PageModel
 
         if (!ModelState.IsValid)
         {
+            return Page();
+        }
+
+        var recaptcha = await _recaptchaValidator.ValidateAsync(
+            RecaptchaToken,
+            RecaptchaActions.Register,
+            HttpContext.RequestAborted);
+        if (!recaptcha.IsValid)
+        {
+            ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
             return Page();
         }
 

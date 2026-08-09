@@ -23,5 +23,7 @@ namespace AgroForum.ViewModels.Forum
 
         [Display(Name = "Post anonymously")]
         public bool IsAnonymous { get; set; }
+
+        public string? RecaptchaToken { get; set; }
     }
 }
