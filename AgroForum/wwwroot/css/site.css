@@ -1397,6 +1397,268 @@ a:focus-visible {
     text-align: center;
 }
 
+/* Account management */
+.account-body {
+    background: var(--agro-050);
+}
+
+.account-manage {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(3rem, 6vw, 5rem) 0 clamp(4rem, 7vw, 6rem);
+    background:
+        radial-gradient(circle at 92% 8%, rgba(207, 232, 210, 0.9), transparent 24rem),
+        linear-gradient(180deg, #f8fbf8 0%, var(--agro-050) 100%);
+}
+
+.account-manage::before {
+    position: absolute;
+    width: 26rem;
+    height: 26rem;
+    top: -18rem;
+    left: -8rem;
+    border: 1px solid rgba(35, 134, 54, 0.12);
+    border-radius: 50%;
+    content: "";
+    pointer-events: none;
+}
+
+.account-manage > .container {
+    position: relative;
+    z-index: 1;
+}
+
+.account-manage-header {
+    max-width: 720px;
+    margin-bottom: 2rem;
+}
+
+.account-manage-header h1 {
+    margin: 0.65rem 0 0.75rem;
+    color: var(--agro-900);
+    font-size: clamp(2.35rem, 5vw, 3.65rem);
+    font-weight: 850;
+    letter-spacing: -0.055em;
+    line-height: 1.05;
+}
+
+.account-manage-header p {
+    max-width: 660px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.02rem;
+    line-height: 1.7;
+}
+
+.account-manage-shell {
+    display: grid;
+    grid-template-columns: minmax(240px, 285px) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.account-manage-nav,
+.account-manage-content {
+    border: 1px solid var(--border);
+    border-radius: 1.1rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: var(--shadow-sm);
+}
+
+.account-manage-nav {
+    position: sticky;
+    top: 6.4rem;
+    overflow: hidden;
+    padding: 1rem;
+    border-top: 4px solid var(--agro-600);
+}
+
+.account-manage-nav-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+    padding: 0.3rem 0.35rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.account-manage-nav-heading > span:last-child {
+    min-width: 0;
+}
+
+.account-manage-nav-heading small,
+.account-manage-nav-heading strong {
+    display: block;
+}
+
+.account-manage-nav-heading small {
+    margin-bottom: 0.12rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+}
+
+.account-manage-nav-heading strong {
+    color: var(--agro-900);
+    font-size: 0.9rem;
+}
+
+.account-manage-nav-icon {
+    display: grid;
+    width: 2.65rem;
+    height: 2.65rem;
+    flex: 0 0 2.65rem;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--agro-100);
+    color: var(--agro-700);
+}
+
+.account-manage-nav-icon svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+
+.account-manage-nav .nav-pills {
+    gap: 0.3rem;
+}
+
+.account-manage-nav .nav-link {
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    padding: 0.68rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 0.72rem;
+    color: #355440;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.account-manage-nav .nav-link:hover {
+    border-color: var(--agro-200);
+    background: var(--agro-050);
+    color: var(--agro-800);
+    transform: translateX(2px);
+}
+
+.account-manage-nav .nav-pills .nav-link.active,
+.account-manage-nav .nav-pills .show > .nav-link {
+    border-color: var(--agro-600);
+    background: var(--agro-600);
+    color: #fff;
+    box-shadow: 0 0.45rem 1rem rgba(35, 134, 54, 0.18);
+}
+
+.account-manage-content {
+    min-height: 510px;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.account-manage-content > h3,
+.account-manage-content > h4 {
+    margin: 0 0 1.5rem;
+    color: var(--agro-900);
+    font-weight: 820;
+    letter-spacing: -0.035em;
+}
+
+.account-manage-content > h3 {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: clamp(1.65rem, 3vw, 2rem);
+}
+
+.account-manage-content > .row {
+    --bs-gutter-x: 0;
+}
+
+.account-manage-content > .row > [class*="col-"] {
+    width: 100%;
+    max-width: 680px;
+    flex: 0 0 100%;
+    padding: 0;
+}
+
+.account-manage-content form {
+    max-width: 680px;
+}
+
+.account-manage-content .form-control,
+.account-manage-content .form-select {
+    min-height: 56px;
+    background-color: #fbfdfb;
+}
+
+.account-manage-content .form-control:disabled,
+.account-manage-content .form-control[readonly] {
+    border-color: #dce7df;
+    background-color: #edf3ee;
+    color: #53645a;
+    opacity: 1;
+}
+
+.account-manage-content .btn-primary {
+    min-height: 50px;
+    border-color: var(--agro-600);
+    background: var(--agro-600);
+    color: #fff;
+    box-shadow: 0 0.4rem 1rem rgba(35, 134, 54, 0.16);
+}
+
+.account-manage-content .btn-primary:hover,
+.account-manage-content .btn-primary:focus {
+    border-color: var(--agro-700);
+    background: var(--agro-700);
+    color: #fff;
+    box-shadow: 0 0.65rem 1.4rem rgba(35, 115, 58, 0.22);
+}
+
+.account-manage-content .btn-link {
+    color: var(--agro-700);
+    font-weight: 700;
+}
+
+.account-manage-content .alert-success {
+    border-color: var(--agro-200);
+    background: var(--agro-100);
+    color: var(--agro-900);
+}
+
+@media (max-width: 767.98px) {
+    .account-manage-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .account-manage-nav {
+        position: static;
+    }
+
+    .account-manage-nav .nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .account-manage-nav .nav-link:hover {
+        transform: none;
+    }
+
+    .account-manage-content {
+        min-height: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .account-manage-nav .nav {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Split Farm Story authentication */
 .auth-body .site-header,
 .auth-body .site-footer {
