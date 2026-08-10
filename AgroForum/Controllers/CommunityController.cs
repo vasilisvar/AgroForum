@@ -62,6 +62,8 @@ public sealed class CommunityController : Controller
                 like.ForumPost.AuthorId == id &&
                 !like.ForumPost.IsDeleted &&
                 !like.ForumPost.IsAnonymous);
+        var acceptedSolutionCount = await publicComments
+            .CountAsync(comment => comment.ForumPost.AcceptedCommentId == comment.Id);
 
         var recentPosts = await publicPosts
             .OrderByDescending(post => post.CreatedAt)
@@ -122,7 +124,11 @@ public sealed class CommunityController : Controller
             select role.Name!)
             .ToListAsync();
 
-        var contribution = _badgeService.Build(postCount, commentCount, likesReceived);
+        var contribution = _badgeService.Build(
+            postCount,
+            commentCount,
+            likesReceived,
+            acceptedSolutionCount);
         var displayName = CommunityDisplayName.For(user);
         var model = new CommunityProfileViewModel
         {
@@ -138,6 +144,7 @@ public sealed class CommunityController : Controller
             PublicPostCount = postCount,
             CommentCount = commentCount,
             LikesReceived = likesReceived,
+            AcceptedSolutionCount = acceptedSolutionCount,
             ContributionScore = contribution.Score,
             ContributionLevel = contribution.LevelName,
             NextLevelName = contribution.NextLevelName,

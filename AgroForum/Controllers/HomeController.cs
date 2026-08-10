@@ -24,6 +24,7 @@ namespace AgroForum.Controllers
         {
             var recentPosts = await _context.ForumPosts
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(post => post.Author)
                 .Include(post => post.Comments)
                 .Include(post => post.PostTags)

@@ -22,6 +22,10 @@ namespace AgroForum.ViewModels.Forum
 
         public bool IsPinned { get; set; }
 
+        public bool HasAcceptedSolution { get; set; }
+
+        public bool HasSupportingResource { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime? SavedAt { get; set; }

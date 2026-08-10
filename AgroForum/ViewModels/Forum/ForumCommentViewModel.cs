@@ -12,6 +12,8 @@ namespace AgroForum.ViewModels.Forum
 
         public bool IsAuthorModerator { get; set; }
 
+        public bool IsAcceptedSolution { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }

@@ -47,6 +47,7 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Keyword search across discussion titles, content, and tags.
 - Topic filtering with removable active-filter indicators.
 - Sorting by newest, most liked, or most discussed.
+- Filtering discussions by open or solved status.
 - Six-result pagination that preserves the active search, topic, and sorting choices.
 - Accurate result totals and clear zero-result feedback.
 - Pinned discussions remain prioritized in every sorting mode.
@@ -97,6 +98,16 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Profile links across homepage discussions, forum results, saved discussions, post details, and comments.
 - Editable public profile information inside the redesigned Identity account settings area.
 
+### Knowledge quality
+
+- Discussion owners can accept one visible comment as the solution, including on anonymously published discussions without exposing ownership.
+- Accepted solutions are promoted to the top of the comment list and clearly identified throughout the forum.
+- Contributors receive a private notification, eight contribution points, and an earned Field Guide badge for accepted solutions.
+- Optional supporting-resource titles and HTTP/HTTPS links add research, guidance, or useful context to a discussion.
+- Open/solved discovery filters and status indicators make unresolved questions easier to find.
+- Related discussions are ranked by shared agricultural topics, solution status, and participation.
+- Removing an accepted comment through moderation clears the solution state and its notification safely.
+
 ## Development roadmap
 
 | Milestone | Main objective | Status |
@@ -109,8 +120,8 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 | Anonymous posts and images | Accountable anonymous posting plus one validated, responsive image per discussion | Complete |
 | Abuse prevention | reCAPTCHA v3 on registration, posts, comments, and reports with server-side score validation | Complete |
 | Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Complete |
-| Knowledge quality | Accepted solutions, richer agricultural resources, and improved topic organization | Next milestone |
-| Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Target outcome |
+| Knowledge quality | Accepted solutions, richer agricultural resources, and improved topic organization | Complete |
+| Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Next milestone |
 
 The roadmap describes the intended development direction. Planned features will be implemented and evaluated incrementally rather than presented as already available.
 
@@ -320,6 +331,7 @@ AgroForum/
 - Removed content is soft-deleted and records who removed it and why.
 - Public profiles exclude anonymous discussion ownership and never expose account email addresses as display-name fallbacks.
 - Notifications are private to their recipient and are marked read through anti-forgery-protected POST actions.
+- Supporting-resource links accept only complete HTTP or HTTPS addresses and are rendered with external-link isolation attributes.
 - Saving a discussion remains private and does not notify its author.
 - Moderation decisions are recorded in an append-only audit trail.
 - High-risk write workflows use server-validated, action-specific reCAPTCHA v3 scores when configured.
@@ -328,8 +340,8 @@ AgroForum/
 
 ## Version history
 
-Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and later feature branches cover community engagement, anonymous images, abuse prevention, and community identity before review and integration.
+Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and later feature branches cover community engagement, anonymous images, abuse prevention, community identity, and knowledge quality before review and integration.
 
 ## Project status
 
-AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, validated discussion images, configurable reCAPTCHA v3 abuse prevention, and privacy-conscious community identity. The next scheduled milestone is knowledge quality, followed by testing, deployment readiness, and formal evaluation.
+AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, validated discussion images, configurable reCAPTCHA v3 abuse prevention, privacy-conscious community identity, and accepted-solution knowledge curation. The next scheduled milestone is the final thesis release: automated testing, accessibility and security review, performance work, deployment readiness, and formal evaluation.

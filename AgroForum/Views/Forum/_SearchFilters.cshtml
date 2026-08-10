@@ -40,13 +40,23 @@
                 <option value="comments" selected="@(Model.Sort == "comments")">Most discussed</option>
             </select>
         </div>
+
+        <div>
+            <label class="form-label fw-semibold" for="solution">Solution status</label>
+            <select id="solution" name="solution" class="form-select">
+                <option value="all" selected="@(Model.Solution == "all")">All discussions</option>
+                <option value="open" selected="@(Model.Solution == "open")">Needs a solution</option>
+                <option value="solved" selected="@(Model.Solution == "solved")">Solved</option>
+            </select>
+        </div>
     </div>
 
     <div class="d-grid gap-2">
         <button type="submit" class="btn btn-success">Apply filters</button>
         @if (!string.IsNullOrWhiteSpace(Model.Search) ||
              !string.IsNullOrWhiteSpace(Model.Tag) ||
-             Model.Sort != "newest")
+             Model.Sort != "newest" ||
+             Model.Solution != "all")
         {
             <a class="btn btn-outline-success" asp-action="Index">Clear all</a>
         }

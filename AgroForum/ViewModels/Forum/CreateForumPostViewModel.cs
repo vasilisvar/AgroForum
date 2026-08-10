@@ -21,6 +21,15 @@ namespace AgroForum.ViewModels.Forum
         [Display(Name = "Tags")]
         public string? Tags { get; set; }
 
+        [StringLength(120)]
+        [Display(Name = "Resource title (optional)")]
+        public string? ResourceTitle { get; set; }
+
+        [StringLength(2048)]
+        [Url]
+        [Display(Name = "Resource link (optional)")]
+        public string? ResourceUrl { get; set; }
+
         [Display(Name = "Post anonymously")]
         public bool IsAnonymous { get; set; }
 

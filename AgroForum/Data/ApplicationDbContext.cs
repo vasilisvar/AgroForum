@@ -41,6 +41,12 @@ namespace AgroForum.Data
                 entity.Property(p => p.ImagePath)
                     .HasMaxLength(260);
 
+                entity.Property(p => p.ResourceTitle)
+                    .HasMaxLength(120);
+
+                entity.Property(p => p.ResourceUrl)
+                    .HasMaxLength(2048);
+
                 entity.Property(p => p.DeletionReason)
                     .HasMaxLength(500);
 
@@ -53,6 +59,11 @@ namespace AgroForum.Data
                     .WithMany()
                     .HasForeignKey(p => p.DeletedByUserId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.AcceptedComment)
+                    .WithMany()
+                    .HasForeignKey(p => p.AcceptedCommentId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             builder.Entity<ForumComment>(entity =>

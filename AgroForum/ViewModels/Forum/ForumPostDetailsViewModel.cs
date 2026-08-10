@@ -10,6 +10,10 @@ namespace AgroForum.ViewModels.Forum
 
         public string? ImagePath { get; set; }
 
+        public string? ResourceTitle { get; set; }
+
+        public string? ResourceUrl { get; set; }
+
         public string AuthorName { get; set; } = string.Empty;
 
         public string? AuthorId { get; set; }
@@ -21,6 +25,12 @@ namespace AgroForum.ViewModels.Forum
         public bool IsLocked { get; set; }
 
         public bool IsPinned { get; set; }
+
+        public int? AcceptedCommentId { get; set; }
+
+        public bool HasAcceptedSolution { get; set; }
+
+        public bool CanManageSolution { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -38,6 +48,21 @@ namespace AgroForum.ViewModels.Forum
 
         public IReadOnlyList<ForumCommentViewModel> Comments { get; set; } = new List<ForumCommentViewModel>();
 
+        public IReadOnlyList<RelatedDiscussionViewModel> RelatedDiscussions { get; set; } = new List<RelatedDiscussionViewModel>();
+
         public CreateForumCommentViewModel NewComment { get; set; } = new();
+    }
+
+    public class RelatedDiscussionViewModel
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+
+        public int SharedTagCount { get; set; }
+
+        public int CommentCount { get; set; }
+
+        public bool HasAcceptedSolution { get; set; }
     }
 }

@@ -127,6 +127,24 @@ public sealed class NotificationsController : Controller
         var postTitle = notification.ForumPost?.Title ?? "a discussion";
         var isComment = notification.Type == NotificationTypes.PostCommented;
 
+        if (notification.Type == NotificationTypes.SolutionAccepted)
+        {
+            return new NotificationItemViewModel
+            {
+                Id = notification.Id,
+                ActorId = notification.ActorId,
+                ActorName = actorName,
+                Message = $"accepted your solution on \"{postTitle}\"",
+                Type = "Accepted solution",
+                Symbol = "\u2713",
+                CreatedAt = notification.CreatedAt,
+                IsRead = notification.ReadAt != null,
+                CanOpen = notification.ForumPost is { IsDeleted: false },
+                ForumPostId = notification.ForumPostId,
+                ForumCommentId = notification.ForumCommentId
+            };
+        }
+
         return new NotificationItemViewModel
         {
             Id = notification.Id,

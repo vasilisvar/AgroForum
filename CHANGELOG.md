@@ -1,5 +1,20 @@
 # Changelog
 
+## Version 7 - Knowledge quality - Complete
+
+- Added one owner-managed accepted solution per discussion with anti-forgery protection and server-side ownership, post, comment, and visibility checks.
+- Preserved anonymous discussion privacy while allowing the internal owner to curate the accepted answer.
+- Promoted accepted solutions to the top of the comment list and added solved/open status indicators across details, discovery, and saved discussions.
+- Added open and solved discovery filters that compose with existing keyword, topic, sorting, and pagination state.
+- Added optional supporting-resource titles and validated HTTP/HTTPS links with isolated external-link rendering.
+- Added related-discussion recommendations ranked by shared topics, solved status, and comment activity.
+- Added private accepted-solution notifications, eight contribution points per solution, a solution total, and the Field Guide badge.
+- Cleared solution state and stale notifications when moderation removes an accepted comment.
+- Added the data-preserving `AddKnowledgeQuality` migration with optional resource fields and an accepted-comment relationship.
+- Restored the previously inert notification view component so unread counts now render in the navbar.
+- Added split-query loading to the homepage discussion query to avoid multiple-collection query expansion.
+- Verified resource validation, related topics, owner-only acceptance, solution filtering, notifications, reputation, and desktop/mobile presentation in an isolated LocalDB database.
+
 ## Version 6 - Community identity - Complete
 
 - Added privacy-conscious public profiles with display names, biography, location, farming interests, roles, and join dates.

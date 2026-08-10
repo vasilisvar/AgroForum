@@ -81,4 +81,55 @@ public sealed class CommunityNotificationService
             CreatedAt = DateTime.UtcNow
         });
     }
+
+    public async Task QueueSolutionAcceptedAsync(
+        ForumPost post,
+        ForumComment comment,
+        string actorId,
+        CancellationToken cancellationToken)
+    {
+        if (comment.AuthorId == actorId)
+        {
+            return;
+        }
+
+        var exists = await _context.UserNotifications.AnyAsync(notification =>
+            notification.UserId == comment.AuthorId &&
+            notification.ActorId == actorId &&
+            notification.ForumPostId == post.Id &&
+            notification.ForumCommentId == comment.Id &&
+            notification.Type == NotificationTypes.SolutionAccepted,
+            cancellationToken);
+
+        if (!exists)
+        {
+            _context.UserNotifications.Add(new UserNotification
+            {
+                UserId = comment.AuthorId,
+                ActorId = actorId,
+                ForumPostId = post.Id,
+                ForumCommentId = comment.Id,
+                Type = NotificationTypes.SolutionAccepted,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+    }
+
+    public async Task RemoveSolutionAcceptedAsync(
+        int postId,
+        int commentId,
+        CancellationToken cancellationToken)
+    {
+        var notifications = await _context.UserNotifications
+            .Where(notification =>
+                notification.ForumPostId == postId &&
+                notification.ForumCommentId == commentId &&
+                notification.Type == NotificationTypes.SolutionAccepted)
+            .ToListAsync(cancellationToken);
+
+        if (notifications.Count > 0)
+        {
+            _context.UserNotifications.RemoveRange(notifications);
+        }
+    }
 }

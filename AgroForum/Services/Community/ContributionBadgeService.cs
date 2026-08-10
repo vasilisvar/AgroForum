@@ -4,9 +4,13 @@ namespace AgroForum.Services.Community;
 
 public sealed class ContributionBadgeService
 {
-    public ContributionSummary Build(int postCount, int commentCount, int likesReceived)
+    public ContributionSummary Build(
+        int postCount,
+        int commentCount,
+        int likesReceived,
+        int acceptedSolutionCount)
     {
-        var score = (postCount * 5) + (commentCount * 2) + likesReceived;
+        var score = (postCount * 5) + (commentCount * 2) + likesReceived + (acceptedSolutionCount * 8);
         var contributionCount = postCount + commentCount;
 
         var badges = new List<ContributionBadgeViewModel>
@@ -31,6 +35,13 @@ public sealed class ContributionBadgeService
                 Description = "Received ten likes on public discussions.",
                 Symbol = "🤝",
                 IsEarned = likesReceived >= 10
+            },
+            new()
+            {
+                Name = "Field Guide",
+                Description = "Provided an accepted solution to a community discussion.",
+                Symbol = "\u2713",
+                IsEarned = acceptedSolutionCount >= 1
             },
             new()
             {

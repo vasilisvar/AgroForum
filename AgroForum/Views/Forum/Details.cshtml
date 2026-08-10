@@ -53,6 +53,9 @@
                     {
                         <span class="badge text-bg-success">Pinned</span>
                     }
+                    <span class="solution-status @(Model.HasAcceptedSolution ? "is-solved" : "is-open")">
+                        @(Model.HasAcceptedSolution ? "Solved" : "Needs a solution")
+                    </span>
                     <a class="btn btn-outline-danger btn-sm"
                        asp-action="Report"
                        asp-route-postId="@Model.Id">Report</a>
@@ -70,6 +73,22 @@
             <div class="forum-content mb-4">
                 @Html.Raw(Html.Encode(Model.Content).Replace("\n", "<br />"))
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResourceUrl) &&
+                 !string.IsNullOrWhiteSpace(Model.ResourceTitle))
+            {
+                <aside class="supporting-resource mb-4" aria-label="Supporting resource">
+                    <span class="supporting-resource-icon" aria-hidden="true">&#8599;</span>
+                    <div>
+                        <strong>Supporting resource</strong>
+                        <a href="@Model.ResourceUrl"
+                           target="_blank"
+                           rel="nofollow noopener noreferrer"
+                           referrerpolicy="no-referrer">@Model.ResourceTitle</a>
+                        <small>External source shared by the discussion author</small>
+                    </div>
+                </aside>
+            }
 
             <div class="engagement-bar mb-4" aria-label="Discussion engagement">
                 @if (User.Identity?.IsAuthenticated == true)
@@ -165,7 +184,7 @@
                 <div class="comment-list">
                     @foreach (var comment in Model.Comments)
                     {
-                        <div id="comment-@comment.Id" class="comment-item">
+                        <div id="comment-@comment.Id" class="comment-item @(comment.IsAcceptedSolution ? "is-accepted-solution" : null)">
                             <div class="d-flex justify-content-between gap-3">
                                 <p class="forum-meta mb-2">
                                     <a class="community-author-link" asp-controller="Community" asp-action="Profile" asp-route-id="@comment.AuthorId">@comment.AuthorName</a>
@@ -175,9 +194,25 @@
                                     }
                                     - @comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
                                 </p>
-                                <a class="btn btn-outline-danger btn-sm"
-                                   asp-action="Report"
-                                   asp-route-commentId="@comment.Id">Report</a>
+                                <div class="comment-actions">
+                                    @if (comment.IsAcceptedSolution)
+                                    {
+                                        <span class="accepted-solution-badge"><span aria-hidden="true">&#10003;</span> Accepted solution</span>
+                                    }
+                                    @if (Model.CanManageSolution)
+                                    {
+                                        <form asp-action="ToggleAcceptedSolution" method="post">
+                                            <input type="hidden" name="postId" value="@Model.Id" />
+                                            <input type="hidden" name="commentId" value="@comment.Id" />
+                                            <button type="submit" class="btn btn-sm @(comment.IsAcceptedSolution ? "btn-outline-secondary" : "btn-outline-success")">
+                                                @(comment.IsAcceptedSolution ? "Remove accepted" : "Accept solution")
+                                            </button>
+                                        </form>
+                                    }
+                                    <a class="btn btn-outline-danger btn-sm"
+                                       asp-action="Report"
+                                       asp-route-commentId="@comment.Id">Report</a>
+                                </div>
                             </div>
                             <p class="comment-content mb-0">@comment.Content</p>
                         </div>
@@ -189,6 +224,34 @@
                 <p class="text-muted mb-0">No comments yet.</p>
             }
         </div>
+
+        @if (Model.RelatedDiscussions.Any())
+        {
+            <section class="forum-card related-discussions mb-4" aria-labelledby="related-discussions-title">
+                <div class="related-discussions-heading">
+                    <div>
+                        <p class="section-kicker mb-1">Keep exploring</p>
+                        <h2 id="related-discussions-title" class="h4 fw-bold mb-0">Related discussions</h2>
+                    </div>
+                    <a class="btn btn-outline-success btn-sm" asp-action="Index">Browse all</a>
+                </div>
+                <div class="related-discussion-list">
+                    @foreach (var related in Model.RelatedDiscussions)
+                    {
+                        <article>
+                            <div>
+                                <span class="solution-status @(related.HasAcceptedSolution ? "is-solved" : "is-open")">
+                                    @(related.HasAcceptedSolution ? "Solved" : "Open")
+                                </span>
+                                <span class="forum-meta">@related.SharedTagCount shared @(related.SharedTagCount == 1 ? "topic" : "topics")</span>
+                            </div>
+                            <h3><a asp-action="Details" asp-route-id="@related.Id">@related.Title</a></h3>
+                            <span class="forum-meta">@related.CommentCount @(related.CommentCount == 1 ? "comment" : "comments")</span>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
 
         <div id="add-comment" class="forum-card">
             <h2 class="h4 fw-bold mb-3">Add a comment</h2>

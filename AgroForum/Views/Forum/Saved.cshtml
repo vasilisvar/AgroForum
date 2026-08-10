@@ -52,6 +52,13 @@
                                 {
                                     <span class="badge text-bg-secondary">Locked</span>
                                 }
+                                <span class="solution-status @(post.HasAcceptedSolution ? "is-solved" : "is-open")">
+                                    @(post.HasAcceptedSolution ? "Solution accepted" : "Needs a solution")
+                                </span>
+                                @if (post.HasSupportingResource)
+                                {
+                                    <span class="resource-status">Supporting resource</span>
+                                }
                             </div>
                             @if (post.SavedAt.HasValue)
                             {

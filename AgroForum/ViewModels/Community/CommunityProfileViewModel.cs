@@ -26,6 +26,8 @@ public sealed class CommunityProfileViewModel
 
     public int LikesReceived { get; set; }
 
+    public int AcceptedSolutionCount { get; set; }
+
     public int ContributionScore { get; set; }
 
     public string ContributionLevel { get; set; } = string.Empty;

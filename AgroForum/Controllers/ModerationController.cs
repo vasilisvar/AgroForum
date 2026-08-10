@@ -3,6 +3,7 @@ using AgroForum.Constants;
 using AgroForum.Data;
 using AgroForum.Helpers;
 using AgroForum.Models;
+using AgroForum.Models.Community;
 using AgroForum.Models.Forum;
 using AgroForum.Models.Moderation;
 using AgroForum.ViewModels.Forum;
@@ -264,6 +265,19 @@ namespace AgroForum.Controllers
             report.ForumComment.DeletedAt = DateTime.UtcNow;
             report.ForumComment.DeletedByUserId = userId;
             report.ForumComment.DeletionReason = reason;
+
+            var discussion = await _context.ForumPosts
+                .FirstOrDefaultAsync(post => post.Id == report.ForumComment.ForumPostId);
+            if (discussion?.AcceptedCommentId == report.ForumComment.Id)
+            {
+                discussion.AcceptedCommentId = null;
+                var solutionNotifications = await _context.UserNotifications
+                    .Where(notification =>
+                        notification.ForumCommentId == report.ForumComment.Id &&
+                        notification.Type == NotificationTypes.SolutionAccepted)
+                    .ToListAsync();
+                _context.UserNotifications.RemoveRange(solutionNotifications);
+            }
 
             var relatedReports = await _context.ForumReports
                 .Where(ticket => ticket.ForumCommentId == report.ForumCommentId && ForumReportStatuses.Active.Contains(ticket.Status))
