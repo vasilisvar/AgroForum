@@ -4,55 +4,107 @@
     ViewData["Title"] = "Create Post";
 }
 
-<section class="forum-shell py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
-                    <div>
-                        <p class="text-success fw-semibold mb-1">New discussion</p>
-                        <h1 class="h2 fw-bold mb-0">Create a forum post</h1>
-                    </div>
-                    <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
-                </div>
+<section class="forum-shell create-post-shell">
+    <div class="container create-post-container">
+        <a class="create-post-back" asp-action="Index">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="m15 18-6-6 6-6" />
+            </svg>
+            All discussions
+        </a>
 
-                <form asp-action="Create" method="post" enctype="multipart/form-data" class="forum-card" data-recaptcha-action="@RecaptchaActions.CreatePost">
-                    <input asp-for="RecaptchaToken" type="hidden" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <header class="create-post-heading">
+            <span class="eyebrow">New discussion</span>
+            <h1>Share a question with the community</h1>
+            <p>Describe what you are working on and add the details other growers need to give a useful answer.</p>
+        </header>
+
+        <div class="create-post-layout">
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="forum-card create-post-form" data-recaptcha-action="@RecaptchaActions.CreatePost">
+                <input asp-for="RecaptchaToken" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <section class="create-form-section" aria-labelledby="discussionDetailsHeading">
+                    <div class="create-section-heading">
+                        <span class="create-section-number" aria-hidden="true">1</span>
+                        <div>
+                            <h2 id="discussionDetailsHeading">Describe your discussion</h2>
+                            <p>Use a clear title, then explain the situation and what you have already tried.</p>
+                        </div>
+                    </div>
 
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label fw-semibold"></label>
-                        <input asp-for="Title" class="form-control form-control-lg" />
+                        <input asp-for="Title" class="form-control form-control-lg" placeholder="What would you like help with?" />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Content" class="form-label fw-semibold"></label>
-                        <textarea asp-for="Content" class="form-control" rows="9"></textarea>
+                    <div>
+                        <div class="d-flex justify-content-between gap-3">
+                            <label asp-for="Content" class="form-label fw-semibold"></label>
+                            <span class="create-field-hint">10–5,000 characters</span>
+                        </div>
+                        <textarea asp-for="Content" class="form-control create-post-content" rows="7" placeholder="Include crop, conditions, timing, symptoms, and anything you have already tried."></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+                </section>
+
+                <section class="create-form-section" aria-labelledby="contextHeading">
+                    <div class="create-section-heading">
+                        <span class="create-section-number" aria-hidden="true">2</span>
+                        <div>
+                            <h2 id="contextHeading">Add helpful context</h2>
+                            <p>A photo and a few precise tags help the right people find your post.</p>
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Image" class="form-label fw-semibold"></label>
-                        <input asp-for="Image" class="form-control" accept=".jpg,.jpeg,.png,.webp" aria-describedby="imageHelp" />
-                        <div id="imageHelp" class="form-text">
-                            Add one JPEG, PNG, or WebP image up to 5 MB. The image is optional.
-                        </div>
+                        <label class="create-image-picker" for="Image">
+                            <span class="create-image-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                                    <circle cx="8.5" cy="9" r="1.5" />
+                                    <path d="m4 17 4.5-4.5 3.5 3 2.5-2.5 5.5 5" />
+                                </svg>
+                            </span>
+                            <span class="create-image-copy">
+                                <strong data-file-prompt>Choose a discussion image</strong>
+                                <small data-file-name>JPEG, PNG, or WebP · up to 5 MB</small>
+                            </span>
+                            <span class="btn btn-agro-outline create-image-button">Browse</span>
+                            <input asp-for="Image" class="create-file-input" accept=".jpg,.jpeg,.png,.webp" aria-describedby="imageHelp" data-image-input />
+                        </label>
+                        <div id="imageHelp" class="visually-hidden">Add one JPEG, PNG, or WebP image up to 5 MB. The image is optional.</div>
                         <span asp-validation-for="Image" class="text-danger"></span>
                     </div>
 
-                    <div class="mb-3">
+                    <div>
                         <label asp-for="Tags" class="form-label fw-semibold"></label>
-                        <input asp-for="Tags" class="form-control" placeholder="soil, irrigation, tomatoes" />
-                        <div class="form-text">Separate tags with commas. Moderators can adjust tags later.</div>
+                        <input asp-for="Tags" class="form-control" placeholder="e.g. soil, irrigation, tomatoes" />
+                        <div class="form-text">Separate tags with commas. Moderators can adjust them later.</div>
                         <span asp-validation-for="Tags" class="text-danger"></span>
                     </div>
+                </section>
 
-                    <fieldset class="forum-resource-fields mb-3">
-                        <legend class="h6 fw-bold">Supporting resource (optional)</legend>
-                        <p class="form-text mt-0">
-                            Link one useful article, guide, or research source that adds context to the discussion.
-                        </p>
+                <details class="create-resource-disclosure" data-resource-disclosure>
+                    <summary>
+                        <span class="create-resource-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1" />
+                                <path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1" />
+                            </svg>
+                        </span>
+                        <span>
+                            <strong>Add a supporting resource</strong>
+                            <small>Optional article, guide, or research link</small>
+                        </span>
+                        <svg class="create-resource-chevron" aria-hidden="true" viewBox="0 0 24 24">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+                    </summary>
+
+                    <div class="create-resource-fields">
                         <div class="row g-3">
                             <div class="col-md-5">
                                 <label asp-for="ResourceTitle" class="form-label fw-semibold"></label>
@@ -65,22 +117,72 @@
                                 <span asp-validation-for="ResourceUrl" class="text-danger"></span>
                             </div>
                         </div>
-                    </fieldset>
+                    </div>
+                </details>
 
-                    <div class="form-check form-switch mb-4">
+                <div class="create-identity-card">
+                    <span class="create-identity-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+                        </svg>
+                    </span>
+                    <div class="create-identity-copy">
+                        <strong>Posting identity</strong>
+                        <span>Turn this on to hide your name publicly. Moderators can still see account ownership.</span>
+                    </div>
+                    <div class="form-check form-switch create-identity-switch">
                         <input asp-for="IsAnonymous" class="form-check-input" />
                         <label asp-for="IsAnonymous" class="form-check-label"></label>
                     </div>
-                    <div class="form-text mb-4">
-                        Anonymous posts hide your name publicly while retaining account ownership for safety and moderation.
-                    </div>
+                </div>
 
-                    <div class="d-flex justify-content-end gap-2">
-                        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
-                        <button type="submit" class="btn btn-success">Publish post</button>
-                    </div>
-                </form>
-            </div>
+                <div class="create-form-actions">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+                    <button type="submit" class="btn btn-success create-publish-button">
+                        Publish discussion
+                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                            <path d="m5 12 14-7-4 14-3-5-7-2Z" />
+                            <path d="m12 14 7-9" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+
+            <aside class="create-post-sidebar" aria-label="Discussion guidance">
+                <div class="create-guide-card">
+                    <span class="create-guide-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 18h6" />
+                            <path d="M10 22h4" />
+                            <path d="M8.2 14.5A7 7 0 1 1 16 14.4c-.7.5-1 1.1-1 1.6H9c0-.5-.2-1-0.8-1.5Z" />
+                        </svg>
+                    </span>
+                    <h2>A good discussion gets better answers</h2>
+                    <ul>
+                        <li>
+                            <span>1</span>
+                            <p><strong>Be specific</strong> Mention the crop, location or climate, and the exact issue.</p>
+                        </li>
+                        <li>
+                            <span>2</span>
+                            <p><strong>Share what you observed</strong> Include timing, symptoms, and recent changes.</p>
+                        </li>
+                        <li>
+                            <span>3</span>
+                            <p><strong>Keep it useful</strong> Remove personal details and choose focused tags.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <p class="create-community-note">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="M12 3 4.5 6v5c0 4.7 3 8.5 7.5 10 4.5-1.5 7.5-5.3 7.5-10V6L12 3Z" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    Posts remain connected to your account for community safety, even when published anonymously.
+                </p>
+            </aside>
         </div>
     </div>
 </section>
