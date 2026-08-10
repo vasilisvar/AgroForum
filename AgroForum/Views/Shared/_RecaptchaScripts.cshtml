@@ -1,0 +1,73 @@
+@using System.Text.Json
+@using AgroForum.Options
+@using Microsoft.Extensions.Options
+@model string
+@inject IOptions<RecaptchaOptions> RecaptchaConfiguration
+
+@if (RecaptchaConfiguration.Value.Enabled &&
+     !string.IsNullOrWhiteSpace(RecaptchaConfiguration.Value.SiteKey))
+{
+    var siteKeyJson = JsonSerializer.Serialize(RecaptchaConfiguration.Value.SiteKey);
+    var actionJson = JsonSerializer.Serialize(Model);
+
+    <script src="https://www.google.com/recaptcha/api.js?render=@RecaptchaConfiguration.Value.SiteKey"></script>
+    <script>
+        (() => {
+            const siteKey = @Html.Raw(siteKeyJson);
+            const action = @Html.Raw(actionJson);
+            const forms = document.querySelectorAll("form[data-recaptcha-action]");
+
+            for (const form of forms) {
+                if (form.dataset.recaptchaAction !== action) {
+                    continue;
+                }
+
+                form.addEventListener("submit", event => {
+                    if (form.dataset.recaptchaSubmitting === "true") {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    const submitter = event.submitter;
+                    if (submitter) {
+                        submitter.disabled = true;
+                    }
+
+                    const showError = () => {
+                        if (submitter) {
+                            submitter.disabled = false;
+                        }
+
+                        let feedback = form.querySelector("[data-recaptcha-feedback]");
+                        if (!feedback) {
+                            feedback = document.createElement("div");
+                            feedback.className = "alert alert-danger mt-3";
+                            feedback.dataset.recaptchaFeedback = "true";
+                            feedback.setAttribute("role", "alert");
+                            form.prepend(feedback);
+                        }
+                        feedback.textContent = "Security verification could not start. Check your connection and try again.";
+                    };
+
+                    if (typeof grecaptcha === "undefined") {
+                        showError();
+                        return;
+                    }
+
+                    grecaptcha.ready(() => {
+                        grecaptcha.execute(siteKey, { action })
+                            .then(token => {
+                                form.querySelector("input[name='RecaptchaToken']").value = token;
+                                form.dataset.recaptchaSubmitting = "true";
+                                if (submitter) {
+                                    submitter.disabled = false;
+                                }
+                                form.requestSubmit(submitter);
+                            })
+                            .catch(showError);
+                    });
+                });
+            }
+        })();
+    </script>
+}

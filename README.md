@@ -47,6 +47,7 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Keyword search across discussion titles, content, and tags.
 - Topic filtering with removable active-filter indicators.
 - Sorting by newest, most liked, or most discussed.
+- Filtering discussions by open or solved status.
 - Six-result pagination that preserves the active search, topic, and sorting choices.
 - Accurate result totals and clear zero-result feedback.
 - Pinned discussions remain prioritized in every sorting mode.
@@ -79,6 +80,34 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 - Agricultural illustrations integrated into the forum without overwhelming its functional layout.
 - Improved empty states, feedback messages, status badges, and mobile layouts.
 
+### Abuse prevention
+
+- Score-based reCAPTCHA v3 checks on registration, discussion creation, comments, and reports.
+- Distinct action names for each protected workflow and immediate token generation at submit time.
+- Server-side validation of the expected action, risk score, hostname, and two-minute token lifetime.
+- Configuration validation that prevents an enabled deployment from starting without both required keys.
+- Retry-safe, non-disclosing error handling when a token is missing, rejected, expired, or cannot be verified.
+
+### Community identity
+
+- Public member profiles with display names, biographies, locations, farming interests, roles, and join dates.
+- Public activity history for visible discussions and comments without attributing anonymous discussion ownership.
+- Contribution points, progressive community levels, and earned recognition badges.
+- Private in-app notifications when another member likes or comments on a discussion.
+- An unread navbar indicator and notification center with safe mark-as-read actions.
+- Profile links across homepage discussions, forum results, saved discussions, post details, and comments.
+- Editable public profile information inside the redesigned Identity account settings area.
+
+### Knowledge quality
+
+- Discussion owners can accept one visible comment as the solution, including on anonymously published discussions without exposing ownership.
+- Accepted solutions are promoted to the top of the comment list and clearly identified throughout the forum.
+- Contributors receive a private notification, eight contribution points, and an earned Field Guide badge for accepted solutions.
+- Optional supporting-resource titles and HTTP/HTTPS links add research, guidance, or useful context to a discussion.
+- Open/solved discovery filters and status indicators make unresolved questions easier to find.
+- Related discussions are ranked by shared agricultural topics, solution status, and participation.
+- Removing an accepted comment through moderation clears the solution state and its notification safely.
+
 ## Development roadmap
 
 | Milestone | Main objective | Status |
@@ -89,10 +118,10 @@ AgroForum aims to turn those individual experiences into a searchable and respon
 | Version 3 | Search, topic filters, sorting, pagination, result metrics, and stronger farming identity | Complete |
 | Community engagement | Interactive likes and favorites, saved discussions, and clearer participation feedback | Complete |
 | Anonymous posts and images | Accountable anonymous posting plus one validated, responsive image per discussion | Complete |
-| Abuse prevention | reCAPTCHA v3 on registration, posts, comments, and reports with server-side score validation | Next milestone |
-| Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Planned |
-| Knowledge quality | Accepted solutions, richer agricultural resources, and improved topic organization | Planned |
-| Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Target outcome |
+| Abuse prevention | reCAPTCHA v3 on registration, posts, comments, and reports with server-side score validation | Complete |
+| Community identity | User profiles, activity history, reputation or contribution badges, and notifications | Complete |
+| Knowledge quality | Accepted solutions, richer agricultural resources, and improved topic organization | Complete |
+| Final thesis release | Automated testing, accessibility and security review, performance work, deployment, and evaluation | Next milestone |
 
 The roadmap describes the intended development direction. Planned features will be implemented and evaluated incrementally rather than presented as already available.
 
@@ -160,6 +189,8 @@ The main domain areas are forum content, users and roles, reports, and moderatio
 | Forum | `/Forum` | Public browsing; account required to participate |
 | Register | `/Identity/Account/Register` | Public |
 | Sign in | `/Identity/Account/Login` | Public |
+| Community profile | `/Community/Profile/{userId}` | Public; anonymous discussion ownership stays private |
+| Notifications | `/Notifications` | Signed-in account owner only |
 | Moderation board | `/Moderation` | Moderator or Admin |
 | Administration board | `/Admin` | Admin only |
 
@@ -226,6 +257,38 @@ During startup, the configured existing account receives the `Admin` role. Keep 
 
 An Admin can grant or revoke the Moderator role from the Admin board. Moderators can then access `/Moderation` using their own accounts; no shared credentials are required.
 
+## Configuring reCAPTCHA v3
+
+Abuse prevention is implemented but disabled in committed configuration because reCAPTCHA keys are deployment-specific. Register a reCAPTCHA v3 site, then keep its keys outside source control.
+
+For local development, use .NET user secrets:
+
+```powershell
+dotnet user-secrets set "Recaptcha:Enabled" "true" --project AgroForum/AgroForum.csproj
+dotnet user-secrets set "Recaptcha:SiteKey" "your-site-key" --project AgroForum/AgroForum.csproj
+dotnet user-secrets set "Recaptcha:SecretKey" "your-secret-key" --project AgroForum/AgroForum.csproj
+dotnet user-secrets set "Recaptcha:AllowedHostnames:0" "localhost" --project AgroForum/AgroForum.csproj
+```
+
+For a deployed host, use equivalent environment variables:
+
+```text
+Recaptcha__Enabled=true
+Recaptcha__SiteKey=your-site-key
+Recaptcha__SecretKey=your-secret-key
+Recaptcha__AllowedHostnames__0=forum.example.com
+```
+
+The default minimum score is `0.5`. Tune `Recaptcha:MinimumScore` after reviewing real traffic in the reCAPTCHA console. When protection is enabled, AgroForum checks:
+
+- The verification request succeeded.
+- The returned action matches the protected workflow.
+- The risk score meets the configured threshold.
+- The returned hostname is explicitly allowed.
+- The response token is no more than two minutes old.
+
+A configured verification failure blocks the protected write operation and asks the visitor to retry. AgroForum does not send the optional remote IP parameter to the verification service.
+
 ## Database migrations
 
 Apply all migrations before running a fresh checkout:
@@ -266,14 +329,19 @@ AgroForum/
 - Admin and Moderator routes are protected by server-side role authorization.
 - Reports require authenticated users and validated targets.
 - Removed content is soft-deleted and records who removed it and why.
+- Public profiles exclude anonymous discussion ownership and never expose account email addresses as display-name fallbacks.
+- Notifications are private to their recipient and are marked read through anti-forgery-protected POST actions.
+- Supporting-resource links accept only complete HTTP or HTTPS addresses and are rendered with external-link isolation attributes.
+- Saving a discussion remains private and does not notify its author.
 - Moderation decisions are recorded in an append-only audit trail.
+- High-risk write workflows use server-validated, action-specific reCAPTCHA v3 scores when configured.
 - Report row versions help prevent conflicting moderation decisions.
 - Bootstrap identities are configured outside source control.
 
 ## Version history
 
-Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and community engagement is merged into `main`. Day 8 anonymous-post and image work is developed on its own feature branch before review and merge.
+Detailed milestone notes are maintained in [CHANGELOG.md](CHANGELOG.md). Version `2.0.0` is tagged for the Admin and Moderator board release, Version 3 contains the completed forum-discovery work, and later feature branches cover community engagement, anonymous images, abuse prevention, community identity, and knowledge quality before review and integration.
 
 ## Project status
 
-AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, and validated discussion images. The next scheduled milestone is reCAPTCHA v3 abuse prevention, followed by community identity, knowledge quality, testing, deployment readiness, and formal evaluation.
+AgroForum is under active development as a thesis project. The existing application demonstrates the complete forum foundation, secure identity flow, role-based moderation architecture, agricultural interface, forum discovery, community engagement, accountable anonymous posting, validated discussion images, configurable reCAPTCHA v3 abuse prevention, privacy-conscious community identity, and accepted-solution knowledge curation. The next scheduled milestone is the final thesis release: automated testing, accessibility and security review, performance work, deployment readiness, and formal evaluation.

@@ -12,6 +12,8 @@ namespace AgroForum.ViewModels.Forum
 
         public string AuthorName { get; set; } = string.Empty;
 
+        public string? AuthorId { get; set; }
+
         public bool IsAnonymous { get; set; }
 
         public bool IsAuthorModerator { get; set; }
@@ -19,6 +21,10 @@ namespace AgroForum.ViewModels.Forum
         public bool IsLocked { get; set; }
 
         public bool IsPinned { get; set; }
+
+        public bool HasAcceptedSolution { get; set; }
+
+        public bool HasSupportingResource { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

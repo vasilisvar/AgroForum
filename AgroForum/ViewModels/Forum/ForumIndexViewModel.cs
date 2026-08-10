@@ -8,6 +8,8 @@ namespace AgroForum.ViewModels.Forum
 
         public string Sort { get; set; } = "newest";
 
+        public string Solution { get; set; } = "all";
+
         public int CurrentPage { get; set; } = 1;
 
         public int TotalPages { get; set; }

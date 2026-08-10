@@ -1,0 +1,15 @@
+@model int
+
+<li class="nav-item">
+    <a class="notification-nav-link"
+       asp-controller="Notifications"
+       asp-action="Index"
+       aria-label="Notifications@(Model > 0 ? $", {Model} unread" : string.Empty)"
+       title="Notifications">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" /><path d="M10 21h4" /></svg>
+        @if (Model > 0)
+        {
+            <span class="notification-nav-count">@(Model > 99 ? "99+" : Model)</span>
+        }
+    </a>
+</li>

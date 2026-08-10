@@ -25,6 +25,8 @@ namespace AgroForum.ViewModels.Forum
         [Display(Name = "Details")]
         public string? Details { get; set; }
 
+        public string? RecaptchaToken { get; set; }
+
         public IEnumerable<SelectListItem> ReasonOptions => new List<SelectListItem>
         {
             new() { Text = "Spam", Value = "Spam" },

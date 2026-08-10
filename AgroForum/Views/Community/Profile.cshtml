@@ -1,0 +1,170 @@
+@model CommunityProfileViewModel
+
+@{
+    ViewData["Title"] = $"{Model.DisplayName} - Community profile";
+    var earnedBadges = Model.Badges.Count(badge => badge.IsEarned);
+    var progressTarget = Model.PointsToNextLevel.HasValue
+        ? Model.ContributionScore + Model.PointsToNextLevel.Value
+        : Model.ContributionScore;
+    var progress = progressTarget == 0 ? 100 : Math.Min(100, (int)Math.Round(Model.ContributionScore * 100d / progressTarget));
+}
+
+<section class="community-profile-page">
+    <div class="container">
+        <div class="community-profile-hero">
+            <div class="community-profile-avatar" aria-hidden="true">@Model.Initial</div>
+            <div class="community-profile-heading">
+                <span class="eyebrow">Community member</span>
+                <h1>@Model.DisplayName</h1>
+                <div class="community-profile-meta">
+                    @if (!string.IsNullOrWhiteSpace(Model.Location))
+                    {
+                        <span>📍 @Model.Location</span>
+                    }
+                    <span>Joined @Model.JoinedAt.ToLocalTime().ToString("MMMM yyyy")</span>
+                </div>
+                @if (Model.Roles.Any())
+                {
+                    <div class="community-role-list" aria-label="Community roles">
+                        @foreach (var role in Model.Roles)
+                        {
+                            <span class="community-role-badge">@role</span>
+                        }
+                    </div>
+                }
+            </div>
+            @if (Model.IsCurrentUser)
+            {
+                <a class="btn btn-agro-outline community-profile-edit"
+                   asp-area="Identity"
+                   asp-page="/Account/Manage/Index">Edit profile</a>
+            }
+        </div>
+
+        <div class="community-profile-layout">
+            <main class="community-profile-main">
+                <section class="community-panel community-about-panel">
+                    <div class="community-panel-heading">
+                        <span class="eyebrow">From the field</span>
+                        <h2>About @Model.DisplayName</h2>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                    {
+                        <p class="community-bio">@Model.Bio</p>
+                    }
+                    else
+                    {
+                        <p class="community-empty-copy">This member has not added a biography yet.</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.FarmingInterests))
+                    {
+                        <div class="community-interests">
+                            <strong>Farming interests</strong>
+                            <span>@Model.FarmingInterests</span>
+                        </div>
+                    }
+                </section>
+
+                <section class="community-panel">
+                    <div class="community-panel-heading community-panel-heading-row">
+                        <div>
+                            <span class="eyebrow">Public contributions</span>
+                            <h2>Recent activity</h2>
+                        </div>
+                        <span class="community-privacy-note">Anonymous discussions are never attributed here.</span>
+                    </div>
+
+                    @if (Model.RecentActivity.Any())
+                    {
+                        <div class="community-activity-list">
+                            @foreach (var activity in Model.RecentActivity)
+                            {
+                                var targetUrl = Url.Action("Details", "Forum", new { id = activity.ForumPostId });
+                                if (activity.ForumCommentId.HasValue)
+                                {
+                                    targetUrl += $"#comment-{activity.ForumCommentId.Value}";
+                                }
+
+                                <article class="community-activity-item">
+                                    <div class="community-activity-symbol" aria-hidden="true">@(activity.Type == "Discussion" ? "🌿" : "💬")</div>
+                                    <div>
+                                        <div class="community-activity-topline">
+                                            <span>@activity.Type</span>
+                                            <time datetime="@activity.CreatedAt.ToString("O")">@activity.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</time>
+                                        </div>
+                                        <h3><a href="@targetUrl">@activity.Title</a></h3>
+                                        <p>@activity.Preview</p>
+                                        @if (activity.Type == "Discussion")
+                                        {
+                                            <div class="community-activity-metrics">
+                                                <span>@activity.LikeCount likes</span>
+                                                <span>@activity.CommentCount comments</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="community-empty-state">
+                            <span aria-hidden="true">🌱</span>
+                            <div>
+                                <h3>No public activity yet</h3>
+                                <p>New discussions and comments will appear here as this member contributes.</p>
+                            </div>
+                        </div>
+                    }
+                </section>
+            </main>
+
+            <aside class="community-profile-sidebar">
+                <section class="community-panel community-score-panel">
+                    <span class="community-level-label">@Model.ContributionLevel</span>
+                    <strong>@Model.ContributionScore</strong>
+                    <span>contribution points</span>
+                    <div class="community-progress" role="progressbar" aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100">
+                        <span style="width: @progress%"></span>
+                    </div>
+                    @if (Model.PointsToNextLevel.HasValue)
+                    {
+                        <small>@Model.PointsToNextLevel points to @Model.NextLevelName</small>
+                    }
+                    else
+                    {
+                        <small>Highest contribution level reached</small>
+                    }
+                </section>
+
+                <section class="community-stats-panel" aria-label="Contribution totals">
+                    <div><strong>@Model.PublicPostCount</strong><span>Discussions</span></div>
+                    <div><strong>@Model.CommentCount</strong><span>Comments</span></div>
+                    <div><strong>@Model.LikesReceived</strong><span>Likes received</span></div>
+                    <div><strong>@Model.AcceptedSolutionCount</strong><span>Solutions</span></div>
+                </section>
+
+                <section class="community-panel community-badges-panel">
+                    <div class="community-panel-heading">
+                        <span class="eyebrow">Recognition</span>
+                        <h2>Contribution badges</h2>
+                        <p>@earnedBadges of @Model.Badges.Count earned</p>
+                    </div>
+                    <div class="community-badge-list">
+                        @foreach (var badge in Model.Badges)
+                        {
+                            <div class="community-badge @(badge.IsEarned ? "is-earned" : "is-locked")">
+                                <span aria-hidden="true">@(badge.IsEarned ? badge.Symbol : "○")</span>
+                                <div>
+                                    <strong>@badge.Name</strong>
+                                    <small>@badge.Description</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+</section>

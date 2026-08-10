@@ -17,6 +17,16 @@ namespace AgroForum.Models.Forum
         [MaxLength(260)]
         public string? ImagePath { get; set; }
 
+        [MaxLength(120)]
+        public string? ResourceTitle { get; set; }
+
+        [MaxLength(2048)]
+        public string? ResourceUrl { get; set; }
+
+        public int? AcceptedCommentId { get; set; }
+
+        public ForumComment? AcceptedComment { get; set; }
+
         public bool IsAnonymous { get; set; } = false;
 
         public bool IsDeleted { get; set; } = false;

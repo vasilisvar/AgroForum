@@ -1,5 +1,46 @@
 # Changelog
 
+## Version 7 - Knowledge quality - Complete
+
+- Added one owner-managed accepted solution per discussion with anti-forgery protection and server-side ownership, post, comment, and visibility checks.
+- Preserved anonymous discussion privacy while allowing the internal owner to curate the accepted answer.
+- Promoted accepted solutions to the top of the comment list and added solved/open status indicators across details, discovery, and saved discussions.
+- Added open and solved discovery filters that compose with existing keyword, topic, sorting, and pagination state.
+- Added optional supporting-resource titles and validated HTTP/HTTPS links with isolated external-link rendering.
+- Added related-discussion recommendations ranked by shared topics, solved status, and comment activity.
+- Added private accepted-solution notifications, eight contribution points per solution, a solution total, and the Field Guide badge.
+- Cleared solution state and stale notifications when moderation removes an accepted comment.
+- Added the data-preserving `AddKnowledgeQuality` migration with optional resource fields and an accepted-comment relationship.
+- Restored the previously inert notification view component so unread counts now render in the navbar.
+- Added split-query loading to the homepage discussion query to avoid multiple-collection query expansion.
+- Verified resource validation, related topics, owner-only acceptance, solution filtering, notifications, reputation, and desktop/mobile presentation in an isolated LocalDB database.
+
+## Version 6 - Community identity - Complete
+
+- Added privacy-conscious public profiles with display names, biography, location, farming interests, roles, and join dates.
+- Replaced public email-name fallbacks with generated farmer display names and added editable profile fields to Identity account settings.
+- Added public activity history for visible discussions and comments while excluding anonymous discussion ownership.
+- Added contribution scoring, four progressive levels, and earned badges for discussions, helpful activity, likes received, and sustained participation.
+- Added persisted in-app notifications for new likes and comments on a member's discussions.
+- Added an unread notification indicator, a private notification center, mark-all-read handling, and safe POST-based notification opening.
+- Avoided notifications for private saves and prevented self-like or self-comment notifications.
+- Removed stale like notifications when a like is withdrawn and preserved anonymous authors' ability to receive engagement notifications privately.
+- Linked visible author names and avatars to profiles across the homepage, forum feed, saved discussions, discussion details, and comments.
+- Added the default Farmer role for new accounts and data-preserving profile defaults for existing accounts.
+- Added the `AddCommunityIdentity` migration with optional profile columns, a notification table, indexes, and non-destructive role backfill.
+- Added responsive profile, badge, activity, notification, and profile-editing interfaces consistent with the AgroForum design system.
+
+## Version 5 - Abuse prevention - Complete
+
+- Added configurable reCAPTCHA v3 protection to registration, discussion creation, comments, and reports.
+- Executes each challenge at submit time so short-lived tokens are sent to the server immediately.
+- Verifies token success, expected action, score threshold, hostname, and timestamp on the server.
+- Rejects missing, expired, replayed, mismatched, low-score, and malformed verification responses without exposing security details to visitors.
+- Fails closed when enabled verification is unavailable while preserving a retry-friendly user message.
+- Keeps the site key, secret key, score threshold, endpoint, and allowed hostnames in typed configuration.
+- Validates enabled configuration at startup and keeps reCAPTCHA disabled by default until deployment-specific keys are supplied.
+- Avoids transmitting the visitor's IP address because Google treats it as an optional verification parameter.
+
 ## Day 8 - Complete
 
 - Preserved optional anonymous posting while keeping account ownership available internally for safety and moderation.

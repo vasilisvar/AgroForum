@@ -1,0 +1,86 @@
+@model NotificationCenterViewModel
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<section class="notification-page">
+    <div class="container notification-container">
+        @if (TempData["NotificationMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        <header class="notification-header">
+            <div>
+                <span class="eyebrow">Community activity</span>
+                <h1>Notifications</h1>
+                <p>Keep up with responses, appreciation, and accepted solutions.</p>
+            </div>
+            @if (Model.Notifications.Any())
+            {
+                <form asp-action="MarkAllRead" method="post">
+                    <button class="btn btn-agro-outline" type="submit" disabled="@(Model.UnreadCount == 0)">Mark all as read</button>
+                </form>
+            }
+        </header>
+
+        @if (Model.Notifications.Any())
+        {
+            <div class="notification-summary-line">
+                <strong>@Model.UnreadCount</strong>
+                <span>@(Model.UnreadCount == 1 ? "unread notification" : "unread notifications")</span>
+            </div>
+
+            <div class="notification-list">
+                @foreach (var notification in Model.Notifications)
+                {
+                    <article class="notification-item @(!notification.IsRead ? "is-unread" : null)">
+                        <div class="notification-symbol" aria-hidden="true">@notification.Symbol</div>
+                        <div class="notification-copy">
+                            <div class="notification-meta">
+                                <span>@notification.Type</span>
+                                <time datetime="@notification.CreatedAt.ToString("O")">@notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</time>
+                            </div>
+                            <p>
+                                @if (!string.IsNullOrWhiteSpace(notification.ActorId))
+                                {
+                                    <a class="community-author-link" asp-controller="Community" asp-action="Profile" asp-route-id="@notification.ActorId">@notification.ActorName</a>
+                                }
+                                else
+                                {
+                                    <strong>@notification.ActorName</strong>
+                                }
+                                @notification.Message
+                            </p>
+                        </div>
+                        <div class="notification-action">
+                            @if (notification.CanOpen)
+                            {
+                                <form asp-action="Open" method="post">
+                                    <input type="hidden" name="id" value="@notification.Id" />
+                                    <button type="submit" class="btn btn-sm @(notification.IsRead ? "btn-outline-success" : "btn-agro")">View</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="notification-unavailable">Unavailable</span>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="community-empty-state notification-empty-state">
+                <span aria-hidden="true">🔔</span>
+                <div>
+                    <h2>Nothing new yet</h2>
+                    <p>Likes, comments, and accepted solutions will appear here.</p>
+                </div>
+                <a class="btn btn-agro" asp-controller="Forum" asp-action="Index">Explore discussions</a>
+            </div>
+        }
+    </div>
+</section>

@@ -1,0 +1,40 @@
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["BodyClass"] = "account-body";
+}
+
+<section class="account-manage" aria-labelledby="account-settings-title">
+    <div class="container">
+        <header class="account-manage-header">
+            <span class="eyebrow">Your AgroForum profile</span>
+            <h1 id="account-settings-title">Account settings</h1>
+            <p>Keep your profile, sign-in details, security options, and personal data up to date.</p>
+        </header>
+
+        <div class="account-manage-shell">
+            <aside class="account-manage-nav" aria-label="Account settings navigation">
+                <div class="account-manage-nav-heading">
+                    <span class="account-manage-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="8" r="3.25"></circle>
+                            <path d="M5.75 19c.45-3.45 2.55-5.25 6.25-5.25s5.8 1.8 6.25 5.25"></path>
+                        </svg>
+                    </span>
+                    <span>
+                        <small>Personal settings</small>
+                        <strong>Manage your account</strong>
+                    </span>
+                </div>
+                <partial name="_ManageNav" />
+            </aside>
+
+            <div class="account-manage-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

@@ -20,7 +20,8 @@
                     <p class="text-muted mb-0">@Model.TargetPreview</p>
                 </div>
 
-                <form asp-action="Report" method="post" class="forum-card">
+                <form asp-action="Report" method="post" class="forum-card" data-recaptcha-action="@RecaptchaActions.ReportContent">
+                    <input asp-for="RecaptchaToken" type="hidden" />
                     <input type="hidden" asp-for="ForumPostId" />
                     <input type="hidden" asp-for="ForumCommentId" />
                     <input type="hidden" asp-for="ReturnForumPostId" />
@@ -61,4 +62,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <partial name="_RecaptchaScripts" model="RecaptchaActions.ReportContent" />
 }

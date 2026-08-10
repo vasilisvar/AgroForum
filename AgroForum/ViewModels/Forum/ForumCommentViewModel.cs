@@ -8,7 +8,11 @@ namespace AgroForum.ViewModels.Forum
 
         public string AuthorName { get; set; } = string.Empty;
 
+        public string AuthorId { get; set; } = string.Empty;
+
         public bool IsAuthorModerator { get; set; }
+
+        public bool IsAcceptedSolution { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

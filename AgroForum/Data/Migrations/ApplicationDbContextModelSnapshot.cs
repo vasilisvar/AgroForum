@@ -30,12 +30,20 @@ namespace AgroForum.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("Bio")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -44,6 +52,10 @@ namespace AgroForum.Data.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FarmingInterests")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
                     b.Property<string>("FirstName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -51,6 +63,10 @@ namespace AgroForum.Data.Migrations
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -96,6 +112,53 @@ namespace AgroForum.Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("AgroForum.Models.Community.UserNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ActorId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ForumCommentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ForumPostId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("ForumCommentId");
+
+                    b.HasIndex("ForumPostId");
+
+                    b.HasIndex("Type", "ActorId", "ForumPostId");
+
+                    b.HasIndex("UserId", "ReadAt", "CreatedAt");
+
+                    b.ToTable("UserNotifications");
                 });
 
             modelBuilder.Entity("AgroForum.Models.Forum.ForumComment", b =>
@@ -156,6 +219,9 @@ namespace AgroForum.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AcceptedCommentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("AuthorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -194,6 +260,14 @@ namespace AgroForum.Data.Migrations
                     b.Property<bool>("IsPinned")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ResourceTitle")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("ResourceUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -203,6 +277,8 @@ namespace AgroForum.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AcceptedCommentId");
 
                     b.HasIndex("AuthorId");
 
@@ -551,6 +627,38 @@ namespace AgroForum.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AgroForum.Models.Community.UserNotification", b =>
+                {
+                    b.HasOne("AgroForum.Models.ApplicationUser", "Actor")
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("AgroForum.Models.Forum.ForumComment", "ForumComment")
+                        .WithMany()
+                        .HasForeignKey("ForumCommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("AgroForum.Models.Forum.ForumPost", "ForumPost")
+                        .WithMany()
+                        .HasForeignKey("ForumPostId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("AgroForum.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Actor");
+
+                    b.Navigation("ForumComment");
+
+                    b.Navigation("ForumPost");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AgroForum.Models.Forum.ForumComment", b =>
                 {
                     b.HasOne("AgroForum.Models.ApplicationUser", "Author")
@@ -579,6 +687,11 @@ namespace AgroForum.Data.Migrations
 
             modelBuilder.Entity("AgroForum.Models.Forum.ForumPost", b =>
                 {
+                    b.HasOne("AgroForum.Models.Forum.ForumComment", "AcceptedComment")
+                        .WithMany()
+                        .HasForeignKey("AcceptedCommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("AgroForum.Models.ApplicationUser", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
@@ -589,6 +702,8 @@ namespace AgroForum.Data.Migrations
                         .WithMany()
                         .HasForeignKey("DeletedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AcceptedComment");
 
                     b.Navigation("Author");
 

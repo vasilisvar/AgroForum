@@ -16,7 +16,8 @@
                     <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
                 </div>
 
-                <form asp-action="Create" method="post" enctype="multipart/form-data" class="forum-card">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" class="forum-card" data-recaptcha-action="@RecaptchaActions.CreatePost">
+                    <input asp-for="RecaptchaToken" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                     <div class="mb-3">
@@ -47,6 +48,25 @@
                         <span asp-validation-for="Tags" class="text-danger"></span>
                     </div>
 
+                    <fieldset class="forum-resource-fields mb-3">
+                        <legend class="h6 fw-bold">Supporting resource (optional)</legend>
+                        <p class="form-text mt-0">
+                            Link one useful article, guide, or research source that adds context to the discussion.
+                        </p>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label asp-for="ResourceTitle" class="form-label fw-semibold"></label>
+                                <input asp-for="ResourceTitle" class="form-control" placeholder="Irrigation scheduling guide" />
+                                <span asp-validation-for="ResourceTitle" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-7">
+                                <label asp-for="ResourceUrl" class="form-label fw-semibold"></label>
+                                <input asp-for="ResourceUrl" class="form-control" placeholder="https://example.org/guide" />
+                                <span asp-validation-for="ResourceUrl" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </fieldset>
+
                     <div class="form-check form-switch mb-4">
                         <input asp-for="IsAnonymous" class="form-check-input" />
                         <label asp-for="IsAnonymous" class="form-check-label"></label>
@@ -67,4 +87,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <partial name="_RecaptchaScripts" model="RecaptchaActions.CreatePost" />
 }

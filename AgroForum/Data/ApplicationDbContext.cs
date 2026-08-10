@@ -1,4 +1,5 @@
 using AgroForum.Models;
+using AgroForum.Models.Community;
 using AgroForum.Models.Forum;
 using AgroForum.Models.Moderation;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -21,6 +22,7 @@ namespace AgroForum.Data
         public DbSet<ForumPostFavorite> ForumPostFavorites { get; set; }
         public DbSet<ForumReport> ForumReports { get; set; }
         public DbSet<ModerationAction> ModerationActions { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -39,6 +41,12 @@ namespace AgroForum.Data
                 entity.Property(p => p.ImagePath)
                     .HasMaxLength(260);
 
+                entity.Property(p => p.ResourceTitle)
+                    .HasMaxLength(120);
+
+                entity.Property(p => p.ResourceUrl)
+                    .HasMaxLength(2048);
+
                 entity.Property(p => p.DeletionReason)
                     .HasMaxLength(500);
 
@@ -51,6 +59,11 @@ namespace AgroForum.Data
                     .WithMany()
                     .HasForeignKey(p => p.DeletedByUserId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.AcceptedComment)
+                    .WithMany()
+                    .HasForeignKey(p => p.AcceptedCommentId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             builder.Entity<ForumComment>(entity =>
@@ -185,6 +198,47 @@ namespace AgroForum.Data
                     .WithMany()
                     .HasForeignKey(r => r.AssignedToId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<UserNotification>(entity =>
+            {
+                entity.Property(notification => notification.Type)
+                    .IsRequired()
+                    .HasMaxLength(40);
+
+                entity.HasIndex(notification => new
+                {
+                    notification.UserId,
+                    notification.ReadAt,
+                    notification.CreatedAt
+                });
+
+                entity.HasIndex(notification => new
+                {
+                    notification.Type,
+                    notification.ActorId,
+                    notification.ForumPostId
+                });
+
+                entity.HasOne(notification => notification.User)
+                    .WithMany()
+                    .HasForeignKey(notification => notification.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(notification => notification.Actor)
+                    .WithMany()
+                    .HasForeignKey(notification => notification.ActorId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(notification => notification.ForumPost)
+                    .WithMany()
+                    .HasForeignKey(notification => notification.ForumPostId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(notification => notification.ForumComment)
+                    .WithMany()
+                    .HasForeignKey(notification => notification.ForumCommentId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             builder.Entity<ModerationAction>(entity =>

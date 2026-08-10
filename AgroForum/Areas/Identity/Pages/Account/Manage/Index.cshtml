@@ -1,0 +1,74 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Community profile";
+    ViewData["ActivePage"] = "Index";
+}
+
+<h3>Community profile</h3>
+<p class="account-manage-intro">Choose how other members see you and share the agricultural experience you bring to the community.</p>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<form id="profile-form" method="post" class="community-profile-form">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Username" class="form-control" placeholder="Username" disabled />
+        <label asp-for="Username"></label>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Input.DisplayName" class="form-control" placeholder="Public display name" />
+        <label asp-for="Input.DisplayName"></label>
+        <span asp-validation-for="Input.DisplayName" class="text-danger"></span>
+        <div class="form-text">This name appears beside your public discussions and comments. Your email stays private.</div>
+    </div>
+
+    <div class="auth-name-grid mb-3">
+        <div class="form-floating">
+            <input asp-for="Input.FirstName" class="form-control" placeholder="First name" />
+            <label asp-for="Input.FirstName"></label>
+            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+        </div>
+        <div class="form-floating">
+            <input asp-for="Input.LastName" class="form-control" placeholder="Last name" />
+            <label asp-for="Input.LastName"></label>
+            <span asp-validation-for="Input.LastName" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Input.Location" class="form-control" placeholder="Location" />
+        <label asp-for="Input.Location"></label>
+        <span asp-validation-for="Input.Location" class="text-danger"></span>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Input.FarmingInterests" class="form-control" placeholder="Farming interests" />
+        <label asp-for="Input.FarmingInterests"></label>
+        <span asp-validation-for="Input.FarmingInterests" class="text-danger"></span>
+        <div class="form-text">For example: soil health, olives, irrigation, dairy, or agricultural technology.</div>
+    </div>
+
+    <div class="form-floating mb-3">
+        <textarea asp-for="Input.Bio" class="form-control community-bio-input" placeholder="About you"></textarea>
+        <label asp-for="Input.Bio"></label>
+        <span asp-validation-for="Input.Bio" class="text-danger"></span>
+    </div>
+
+    <div class="form-floating mb-4">
+        <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Phone number" />
+        <label asp-for="Input.PhoneNumber"></label>
+        <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+        <div class="form-text">Your phone number remains private and is only used by your account.</div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <button id="update-profile-button" type="submit" class="btn btn-primary">Save profile</button>
+        <a class="btn btn-outline-success" asp-controller="Community" asp-action="Profile" asp-route-id="@Model.UserId">View public profile</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

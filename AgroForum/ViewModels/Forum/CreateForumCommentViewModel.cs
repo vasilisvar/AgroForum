@@ -10,5 +10,7 @@ namespace AgroForum.ViewModels.Forum
         [StringLength(3000, MinimumLength = 2)]
         [Display(Name = "Comment")]
         public string Content { get; set; } = string.Empty;
+
+        public string? RecaptchaToken { get; set; }
     }
 }

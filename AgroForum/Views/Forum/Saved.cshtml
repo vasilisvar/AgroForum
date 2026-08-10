@@ -52,6 +52,13 @@
                                 {
                                     <span class="badge text-bg-secondary">Locked</span>
                                 }
+                                <span class="solution-status @(post.HasAcceptedSolution ? "is-solved" : "is-open")">
+                                    @(post.HasAcceptedSolution ? "Solution accepted" : "Needs a solution")
+                                </span>
+                                @if (post.HasSupportingResource)
+                                {
+                                    <span class="resource-status">Supporting resource</span>
+                                }
                             </div>
                             @if (post.SavedAt.HasValue)
                             {
@@ -60,7 +67,15 @@
                         </div>
 
                         <p class="forum-meta mb-2">
-                            Posted by @post.AuthorName
+                            Posted by
+                            @if (post.AuthorId != null)
+                            {
+                                <a class="community-author-link" asp-controller="Community" asp-action="Profile" asp-route-id="@post.AuthorId">@post.AuthorName</a>
+                            }
+                            else
+                            {
+                                @post.AuthorName
+                            }
                             @if (post.IsAuthorModerator)
                             {
                                 <span class="moderator-badge">Moderator</span>

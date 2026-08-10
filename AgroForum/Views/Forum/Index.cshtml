@@ -92,7 +92,8 @@
                                            asp-action="Index"
                                            asp-route-search="@Model.Search"
                                            asp-route-tag="@tag"
-                                           asp-route-sort="@Model.Sort">@tag</a>
+                                           asp-route-sort="@Model.Sort"
+                                           asp-route-solution="@Model.Solution">@tag</a>
                                     }
                                 </div>
 
@@ -106,6 +107,13 @@
                                 {
                                     <span class="badge text-bg-success me-1">Pinned</span>
                                 }
+                                <span class="solution-status @(post.HasAcceptedSolution ? "is-solved" : "is-open")">
+                                    @(post.HasAcceptedSolution ? "Solution accepted" : "Needs a solution")
+                                </span>
+                                @if (post.HasSupportingResource)
+                                {
+                                    <span class="resource-status">Supporting resource</span>
+                                }
                             </div>
 
                             @if (post.IsLocked)
@@ -115,7 +123,15 @@
                         </div>
 
                         <p class="forum-meta mb-2">
-                            Posted by @post.AuthorName
+                            Posted by
+                            @if (post.AuthorId != null)
+                            {
+                                <a class="community-author-link" asp-controller="Community" asp-action="Profile" asp-route-id="@post.AuthorId">@post.AuthorName</a>
+                            }
+                            else
+                            {
+                                @post.AuthorName
+                            }
                             @if (post.IsAuthorModerator)
                             {
                                 <span class="moderator-badge">Moderator</span>
@@ -221,6 +237,7 @@
                                        asp-route-search="@Model.Search"
                                        asp-route-tag="@Model.Tag"
                                        asp-route-sort="@Model.Sort"
+                                       asp-route-solution="@Model.Solution"
                                        asp-route-page="@(Model.CurrentPage - 1)"
                                        aria-label="Previous page">Previous</a>
                                 </li>
@@ -228,7 +245,7 @@
                                 @if (startPage > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-tag="@Model.Tag" asp-route-sort="@Model.Sort" asp-route-page="1">1</a>
+                                        <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-tag="@Model.Tag" asp-route-sort="@Model.Sort" asp-route-solution="@Model.Solution" asp-route-page="1">1</a>
                                     </li>
                                     @if (startPage > 2)
                                     {
@@ -244,6 +261,7 @@
                                            asp-route-search="@Model.Search"
                                            asp-route-tag="@Model.Tag"
                                            asp-route-sort="@Model.Sort"
+                                           asp-route-solution="@Model.Solution"
                                            asp-route-page="@pageNumber">@pageNumber</a>
                                     </li>
                                 }
@@ -255,7 +273,7 @@
                                         <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
                                     }
                                     <li class="page-item">
-                                        <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-tag="@Model.Tag" asp-route-sort="@Model.Sort" asp-route-page="@Model.TotalPages">@Model.TotalPages</a>
+                                        <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-tag="@Model.Tag" asp-route-sort="@Model.Sort" asp-route-solution="@Model.Solution" asp-route-page="@Model.TotalPages">@Model.TotalPages</a>
                                     </li>
                                 }
 
@@ -265,6 +283,7 @@
                                        asp-route-search="@Model.Search"
                                        asp-route-tag="@Model.Tag"
                                        asp-route-sort="@Model.Sort"
+                                       asp-route-solution="@Model.Solution"
                                        asp-route-page="@(Model.CurrentPage + 1)"
                                        aria-label="Next page">Next</a>
                                 </li>

@@ -4,7 +4,9 @@ using AgroForum.Data;
 using AgroForum.Helpers;
 using AgroForum.Models;
 using AgroForum.Models.Forum;
+using AgroForum.Services.Community;
 using AgroForum.Services.PostImages;
+using AgroForum.Services.Recaptcha;
 using AgroForum.ViewModels.Forum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,19 +22,30 @@ namespace AgroForum.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PostImageStorage _postImageStorage;
+        private readonly IRecaptchaValidator _recaptchaValidator;
+        private readonly CommunityNotificationService _notificationService;
 
         public ForumController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            PostImageStorage postImageStorage)
+            PostImageStorage postImageStorage,
+            IRecaptchaValidator recaptchaValidator,
+            CommunityNotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
             _postImageStorage = postImageStorage;
+            _recaptchaValidator = recaptchaValidator;
+            _notificationService = notificationService;
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Index(string? search, string? tag, string? sort, int page = 1)
+        public async Task<IActionResult> Index(
+            string? search,
+            string? tag,
+            string? sort,
+            string? solution,
+            int page = 1)
         {
             var currentUserId = _userManager.GetUserId(User);
             var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
@@ -42,6 +55,12 @@ namespace AgroForum.Controllers
                 "likes" => "likes",
                 "comments" => "comments",
                 _ => "newest"
+            };
+            var selectedSolution = solution?.Trim().ToLowerInvariant() switch
+            {
+                "solved" => "solved",
+                "open" => "open",
+                _ => "all"
             };
 
             var postsQuery = _context.ForumPosts
@@ -69,6 +88,15 @@ namespace AgroForum.Controllers
                     post.PostTags.Any(postTag =>
                         postTag.ForumTag.Slug == normalizedTag ||
                         postTag.ForumTag.Name == normalizedTag));
+            }
+
+            if (selectedSolution == "solved")
+            {
+                postsQuery = postsQuery.Where(post => post.AcceptedCommentId != null);
+            }
+            else if (selectedSolution == "open")
+            {
+                postsQuery = postsQuery.Where(post => post.AcceptedCommentId == null);
             }
 
             var totalResults = await postsQuery.CountAsync();
@@ -118,6 +146,7 @@ namespace AgroForum.Controllers
                 Search = normalizedSearch,
                 Tag = normalizedTag,
                 Sort = selectedSort,
+                Solution = selectedSolution,
                 CurrentPage = currentPage,
                 TotalPages = totalPages,
                 TotalResults = totalResults,
@@ -129,10 +158,13 @@ namespace AgroForum.Controllers
                     Preview = BuildPreview(post.Content),
                     ImagePath = post.ImagePath,
                     AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                    AuthorId = post.IsAnonymous ? null : post.AuthorId,
                     IsAnonymous = post.IsAnonymous,
                     IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                     IsLocked = post.IsLocked,
                     IsPinned = post.IsPinned,
+                    HasAcceptedSolution = post.AcceptedCommentId != null,
+                    HasSupportingResource = post.ResourceUrl != null,
                     CreatedAt = post.CreatedAt,
                     CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
                     LikeCount = post.Likes.Count,
@@ -172,9 +204,20 @@ namespace AgroForum.Controllers
                     .ThenInclude(post => post.Comments)
                 .Include(favorite => favorite.ForumPost)
                     .ThenInclude(post => post.Likes)
-                .Include(favorite => favorite.ForumPost)
-                    .ThenInclude(post => post.Favorites)
                 .ToListAsync();
+
+            var favoritePostIds = favorites
+                .Select(favorite => favorite.ForumPostId)
+                .ToList();
+
+            var favoriteCounts = favoritePostIds.Count == 0
+                ? new Dictionary<int, int>()
+                : await _context.ForumPostFavorites
+                    .AsNoTracking()
+                    .Where(favorite => favoritePostIds.Contains(favorite.ForumPostId))
+                    .GroupBy(favorite => favorite.ForumPostId)
+                    .Select(group => new { PostId = group.Key, Count = group.Count() })
+                    .ToDictionaryAsync(item => item.PostId, item => item.Count);
 
             var moderatorIds = await GetModeratorIdsAsync(
                 favorites.Select(favorite => favorite.ForumPost.AuthorId));
@@ -191,15 +234,18 @@ namespace AgroForum.Controllers
                         Preview = BuildPreview(post.Content),
                         ImagePath = post.ImagePath,
                         AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                        AuthorId = post.IsAnonymous ? null : post.AuthorId,
                         IsAnonymous = post.IsAnonymous,
                         IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                         IsLocked = post.IsLocked,
                         IsPinned = post.IsPinned,
+                        HasAcceptedSolution = post.AcceptedCommentId != null,
+                        HasSupportingResource = post.ResourceUrl != null,
                         CreatedAt = post.CreatedAt,
                         SavedAt = favorite.CreatedAt,
                         CommentCount = post.Comments.Count(comment => !comment.IsDeleted),
                         LikeCount = post.Likes.Count,
-                        FavoriteCount = post.Favorites.Count,
+                        FavoriteCount = favoriteCounts.GetValueOrDefault(post.Id),
                         IsLikedByCurrentUser = post.Likes.Any(like => like.UserId == userId),
                         IsFavoritedByCurrentUser = true,
                         Tags = post.PostTags
@@ -234,6 +280,37 @@ namespace AgroForum.Controllers
                 return NotFound();
             }
 
+            var tagIds = post.PostTags
+                .Select(postTag => postTag.ForumTagId)
+                .ToList();
+
+            var relatedDiscussions = tagIds.Count == 0
+                ? new List<RelatedDiscussionViewModel>()
+                : await _context.ForumPosts
+                    .AsNoTracking()
+                    .Where(item =>
+                        item.Id != post.Id &&
+                        !item.IsDeleted &&
+                        item.PostTags.Any(postTag => tagIds.Contains(postTag.ForumTagId)))
+                    .Select(item => new RelatedDiscussionViewModel
+                    {
+                        Id = item.Id,
+                        Title = item.Title,
+                        SharedTagCount = item.PostTags.Count(postTag => tagIds.Contains(postTag.ForumTagId)),
+                        CommentCount = item.Comments.Count(comment => !comment.IsDeleted),
+                        HasAcceptedSolution = item.AcceptedCommentId != null
+                    })
+                    .OrderByDescending(item => item.SharedTagCount)
+                    .ThenByDescending(item => item.HasAcceptedSolution)
+                    .ThenByDescending(item => item.CommentCount)
+                    .Take(3)
+                    .ToListAsync();
+
+            var acceptedCommentIsVisible = post.AcceptedCommentId.HasValue &&
+                post.Comments.Any(comment =>
+                    comment.Id == post.AcceptedCommentId.Value &&
+                    !comment.IsDeleted);
+
             var moderatorIds = await GetModeratorIdsAsync(
                 post.Comments.Select(comment => comment.AuthorId).Append(post.AuthorId));
 
@@ -243,11 +320,17 @@ namespace AgroForum.Controllers
                 Title = post.Title,
                 Content = post.Content,
                 ImagePath = post.ImagePath,
+                ResourceTitle = post.ResourceTitle,
+                ResourceUrl = post.ResourceUrl,
                 AuthorName = GetDisplayName(post.Author, post.IsAnonymous),
+                AuthorId = post.IsAnonymous ? null : post.AuthorId,
                 IsAnonymous = post.IsAnonymous,
                 IsAuthorModerator = !post.IsAnonymous && moderatorIds.Contains(post.AuthorId),
                 IsLocked = post.IsLocked,
                 IsPinned = post.IsPinned,
+                AcceptedCommentId = acceptedCommentIsVisible ? post.AcceptedCommentId : null,
+                HasAcceptedSolution = acceptedCommentIsVisible,
+                CanManageSolution = currentUserId == post.AuthorId,
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 LikeCount = post.Likes.Count,
@@ -265,19 +348,23 @@ namespace AgroForum.Controllers
                     .ToList(),
                 Comments = post.Comments
                     .Where(comment => !comment.IsDeleted)
-                    .OrderBy(comment => comment.CreatedAt)
+                    .OrderByDescending(comment => acceptedCommentIsVisible && comment.Id == post.AcceptedCommentId)
+                    .ThenBy(comment => comment.CreatedAt)
                     .Select(comment => new ForumCommentViewModel
                     {
                         Id = comment.Id,
                         Content = comment.Content,
                         AuthorName = GetDisplayName(comment.Author, isAnonymous: false),
+                        AuthorId = comment.AuthorId,
                         IsAuthorModerator = moderatorIds.Contains(comment.AuthorId),
+                        IsAcceptedSolution = acceptedCommentIsVisible && comment.Id == post.AcceptedCommentId,
                         CreatedAt = comment.CreatedAt,
                         UpdatedAt = comment.UpdatedAt,
                         IsDeleted = comment.IsDeleted,
                         DeletionReason = comment.DeletionReason
                     })
                     .ToList(),
+                RelatedDiscussions = relatedDiscussions,
                 NewComment = new CreateForumCommentViewModel { ForumPostId = post.Id }
             };
 
@@ -287,9 +374,79 @@ namespace AgroForum.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleAcceptedSolution(int postId, int commentId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var post = await _context.ForumPosts
+                .FirstOrDefaultAsync(item => item.Id == postId && !item.IsDeleted);
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            if (post.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            var comment = await _context.ForumComments
+                .FirstOrDefaultAsync(item =>
+                    item.Id == commentId &&
+                    item.ForumPostId == postId &&
+                    !item.IsDeleted);
+            if (comment == null)
+            {
+                return NotFound();
+            }
+
+            if (post.AcceptedCommentId == comment.Id)
+            {
+                post.AcceptedCommentId = null;
+                await _notificationService.RemoveSolutionAcceptedAsync(
+                    post.Id,
+                    comment.Id,
+                    HttpContext.RequestAborted);
+                TempData["ForumMessage"] = "Accepted solution removed.";
+            }
+            else
+            {
+                if (post.AcceptedCommentId.HasValue)
+                {
+                    await _notificationService.RemoveSolutionAcceptedAsync(
+                        post.Id,
+                        post.AcceptedCommentId.Value,
+                        HttpContext.RequestAborted);
+                }
+
+                post.AcceptedCommentId = comment.Id;
+                await _notificationService.QueueSolutionAcceptedAsync(
+                    post,
+                    comment,
+                    userId,
+                    HttpContext.RequestAborted);
+                TempData["ForumMessage"] = "Comment marked as the accepted solution.";
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Details), null, new { id = post.Id }, "comments");
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleLike(int postId, string? returnUrl)
         {
-            if (!await _context.ForumPosts.AnyAsync(post => post.Id == postId && !post.IsDeleted))
+            var postAuthorId = await _context.ForumPosts
+                .Where(post => post.Id == postId && !post.IsDeleted)
+                .Select(post => post.AuthorId)
+                .FirstOrDefaultAsync();
+
+            if (postAuthorId == null)
             {
                 return NotFound();
             }
@@ -309,11 +466,21 @@ namespace AgroForum.Controllers
                     UserId = userId,
                     CreatedAt = DateTime.UtcNow
                 });
+                await _notificationService.QueuePostLikedAsync(
+                    postId,
+                    postAuthorId,
+                    userId,
+                    HttpContext.RequestAborted);
                 TempData["ForumMessage"] = "Discussion liked.";
             }
             else
             {
                 _context.ForumPostLikes.Remove(existingLike);
+                await _notificationService.RemovePostLikedAsync(
+                    postId,
+                    postAuthorId,
+                    userId,
+                    HttpContext.RequestAborted);
                 TempData["ForumMessage"] = "Like removed.";
             }
 
@@ -370,6 +537,20 @@ namespace AgroForum.Controllers
         [RequestSizeLimit(PostImageStorage.MaxFileSizeBytes + 1_048_576)]
         public async Task<IActionResult> Create(CreateForumPostViewModel model)
         {
+            ValidateSupportingResource(model);
+
+            if (ModelState.IsValid)
+            {
+                var recaptcha = await _recaptchaValidator.ValidateAsync(
+                    model.RecaptchaToken,
+                    RecaptchaActions.CreatePost,
+                    HttpContext.RequestAborted);
+                if (!recaptcha.IsValid)
+                {
+                    ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -405,6 +586,12 @@ namespace AgroForum.Controllers
                     Title = model.Title.Trim(),
                     Content = model.Content.Trim(),
                     ImagePath = imagePath,
+                    ResourceTitle = string.IsNullOrWhiteSpace(model.ResourceTitle)
+                        ? null
+                        : model.ResourceTitle.Trim(),
+                    ResourceUrl = string.IsNullOrWhiteSpace(model.ResourceUrl)
+                        ? null
+                        : model.ResourceUrl.Trim(),
                     IsAnonymous = model.IsAnonymous,
                     AuthorId = userId,
                     CreatedAt = DateTime.UtcNow
@@ -448,9 +635,22 @@ namespace AgroForum.Controllers
                 return RedirectToAction(nameof(Details), null, new { id = post.Id }, "add-comment");
             }
 
+            if (ModelState.IsValid)
+            {
+                var recaptcha = await _recaptchaValidator.ValidateAsync(
+                    model.RecaptchaToken,
+                    RecaptchaActions.CreateComment,
+                    HttpContext.RequestAborted);
+                if (!recaptcha.IsValid)
+                {
+                    ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
-                TempData["ForumError"] = "Please write a valid comment before submitting.";
+                TempData["ForumError"] = ModelState[string.Empty]?.Errors.FirstOrDefault()?.ErrorMessage
+                    ?? "Please write a valid comment before submitting.";
                 return RedirectToAction(nameof(Details), null, new { id = post.Id }, "add-comment");
             }
 
@@ -469,6 +669,7 @@ namespace AgroForum.Controllers
             };
 
             _context.ForumComments.Add(comment);
+            _notificationService.QueuePostCommented(post, comment, userId);
             await _context.SaveChangesAsync();
 
             TempData["ForumMessage"] = "Your comment has been added.";
@@ -508,6 +709,16 @@ namespace AgroForum.Controllers
 
             if (!ModelState.IsValid)
             {
+                return View(hydratedModel);
+            }
+
+            var recaptcha = await _recaptchaValidator.ValidateAsync(
+                model.RecaptchaToken,
+                RecaptchaActions.ReportContent,
+                HttpContext.RequestAborted);
+            if (!recaptcha.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, recaptcha.ErrorMessage!);
                 return View(hydratedModel);
             }
 
@@ -652,14 +863,47 @@ namespace AgroForum.Controllers
                 return "Community member";
             }
 
-            var fullName = $"{user.FirstName} {user.LastName}".Trim();
-            return string.IsNullOrWhiteSpace(fullName) ? user.UserName ?? "Community member" : fullName;
+            return CommunityDisplayName.For(user);
         }
 
         private static string BuildPreview(string content)
         {
             var preview = Regex.Replace(content, "\\s+", " ").Trim();
             return preview.Length <= 180 ? preview : $"{preview[..180]}...";
+        }
+
+        private void ValidateSupportingResource(CreateForumPostViewModel model)
+        {
+            var hasTitle = !string.IsNullOrWhiteSpace(model.ResourceTitle);
+            var hasUrl = !string.IsNullOrWhiteSpace(model.ResourceUrl);
+
+            if (!hasTitle && !hasUrl)
+            {
+                return;
+            }
+
+            if (!hasTitle)
+            {
+                ModelState.AddModelError(
+                    nameof(model.ResourceTitle),
+                    "Add a short title for the supporting resource.");
+            }
+
+            if (!hasUrl)
+            {
+                ModelState.AddModelError(
+                    nameof(model.ResourceUrl),
+                    "Add the full supporting-resource link.");
+                return;
+            }
+
+            if (!Uri.TryCreate(model.ResourceUrl!.Trim(), UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                ModelState.AddModelError(
+                    nameof(model.ResourceUrl),
+                    "Use a complete http or https link.");
+            }
         }
 
         private IActionResult RedirectToForumLocation(int postId, string? returnUrl)
